@@ -1,0 +1,7 @@
+V1: Linear --> Depende de 1 entrada
+V2: Linear --> Depende de 1 entrada
+V3: O(1)
+V4: Linear --> Depende das 2 entradas
+V5: Complexidade logarítmica. Curva cada vez menos íngreme.
+V6: Linear --> Propriedade alienígena ae
+V9: Complexidade não-linear (exponencial). n².
