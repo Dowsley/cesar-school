@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct node{
 	int valor;
@@ -16,29 +17,27 @@ void exibir(node**, int);
 //------------ PROGRAMA PRINCIPAL -----------//
 int main()
 {
-	int n;   // Qtd. de casos teste.
-	int tamanho;   // Qtd. de endereços-bases na tabela. Tamanho.
-	int c;   // Qtd. de chaves que serão inseridas.
-	int novo_valor;
+    int n, c, tamanho, novo_valor;
 
-	scanf("%d", &n);   // Quantos casos teste?
-	for (n; n > 0; n--)
-	{
-		scanf("%d %d", &tamanho, &c);
+    scanf("%d", &n);
 
-		node** tabela = gerar_tabela(tamanho);
+    for (n; n > 0; n--)
+    {
+        scanf("%d %d", &tamanho, &c);
 
-		for (c; c > 0; c--){
+        node** tabela = gerar_tabela(tamanho);
 
-			scanf("%d", &novo_valor);
-			inserir_tabela(tabela, novo_valor, tamanho);
-		}
-
-		printf("\n");
-		exibir(tabela, tamanho);
-		printf("\n");
-
-	}
+        for (c; c > 0; c--)
+        {
+            scanf("%d", &novo_valor);
+            inserir_tabela(tabela, novo_valor, tamanho);
+        }
+        exibir(tabela, tamanho);
+        if (n != 1)
+            printf("\n\n");
+    }
+    printf("\n");
+	return 0;
 }
 
 
@@ -46,24 +45,26 @@ int main()
 void exibir(node** tabela, int tamanho)
 {
 	for (int i = 0; i < tamanho; i++)
-	{
-		printf("%d", i);
-		node* head = tabela[i];
+    {
+        node* head = tabela[i];
+        printf("%d", i);
 
-		if (head == NULL)
-			printf(" -> \\");
-		else{
-			node* atual = head;
-
-			while (atual != NULL)
-			{
-				printf(" -> %d", atual->valor);
-				atual = atual->prox;
-			}
-			printf(" -> \\");
-		}
-		printf("\n");
-	}
+        if (head == NULL)
+            printf(" -> \\");
+        else
+        {
+            node* atual = head;
+            while (atual != NULL)
+            {
+                printf(" -> %d", atual->valor);
+                atual = atual->prox;
+            }
+            if (atual == NULL)
+                printf(" -> \\");
+        }
+        if (i != tamanho - 1)
+            printf("\n");
+    }
 }
 
 
@@ -72,7 +73,7 @@ void exibir(node** tabela, int tamanho)
 void inserir_node(node** head, int novo_valor)
 {
 	node* novo_node = malloc(sizeof(node*));
-	
+
 	/* Cria um novo node, depois decide onde irá inserir */
 	(*novo_node).valor = novo_valor;
 	(*novo_node).prox = NULL;
@@ -117,7 +118,7 @@ void inserir_tabela(node** tabela, int novo_valor, int tamanho)
 		inserir_node(&head, novo_valor);
 
 		tabela[local] = head;
-	
+
 	} else {   // Se existir...
 		node* head = tabela[local];
 
