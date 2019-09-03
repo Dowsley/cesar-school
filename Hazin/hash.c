@@ -53,7 +53,7 @@ void exibir(node** tabela, int tamanho)
             printf(" -> \\");
         else
         {
-            node* atual = head;
+            node* atual = *head;
             while (atual != NULL)
             {
                 printf(" -> %d", atual->valor);
