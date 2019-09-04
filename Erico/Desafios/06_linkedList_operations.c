@@ -49,6 +49,7 @@ void add(node** head, int novo_valor)
 	}
 }
 
+
 void exibir(node** head)
 {
 		printf("LISTA");
