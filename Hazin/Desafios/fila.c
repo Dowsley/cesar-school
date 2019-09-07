@@ -13,7 +13,8 @@ typedef struct master{
 }master;
 
 void addNode(master*, int);
-void display (master*);
+void displayQueue(master*);
+void rmNode(master* , int);
 
 int main()
 {
@@ -22,33 +23,37 @@ int main()
 	int new_id;
 	int old_id;
 
-	master Master = NULL;
+	master Master;
+	Master.end = NULL;
+	Master.start = NULL;
 
 	scanf("%d", &n);
-	for (n; n > 0; n--)
+	for (; n > 0; n--)
 	{
 		scanf("%d", &new_id);
 		addNode(&Master, new_id);
 	}
 
-/*	scanf("%d", &m)
-	for (m; m > 0; m--)
+	scanf("%d", &m);
+	for (; m > 0; m--)
 	{
 		scanf("%d", &old_id);
 		rmNode(&Master, old_id);
-	}	*/
+	}
 
+	displayQueue(&Master);
+	printf("\n");
 	return 0;
 }
 
 
 void addNode(master* Master, int new_id)
 {
-	node* new_node = malloc(sizeof(node*))
+	node* new_node = malloc(sizeof(node*));
 	new_node->id = new_id;
 	new_node->next = NULL;
 
-	if (*Master == NULL){
+	if (Master->end == NULL && Master->start == NULL){
 		Master->end = new_node;
 		Master->start = new_node;
 	}
@@ -61,17 +66,28 @@ void addNode(master* Master, int new_id)
 
 
 
-/*void rmNode(*master Master, int old_id)
+void rmNode(master* Master, int old_id)
 {
+	node* atual = Master->end;
+	node* prev;
+	while (atual->id != old_id)
+	{
+		prev = atual;
+		atual = atual->next;
+	}
 
-}*/
+	prev->next = atual->next;
+	free(atual);
+}
 
 
 
 void displayQueue(master* Master)
 {
 	node* atual = Master->end;
-	while (atual->next != NULL)
-		printf("%d \n", atual->id);
-
+	while (atual != NULL)
+	{
+		printf("%d ", atual->id);
+		atual = atual->next;
+	}
 }
