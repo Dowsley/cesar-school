@@ -59,7 +59,8 @@ void addNode(master* Master, int new_id)
 	}
 
 	else{
-		new_node->next = Master->end;
+		node* atual = Master->end;
+		atual->next = new_node;
 		Master->end = new_node;
 	}
 }
@@ -68,7 +69,7 @@ void addNode(master* Master, int new_id)
 
 void rmNode(master* Master, int old_id)
 {
-	node* atual = Master->end;
+	node* atual = Master->start;
 	node* prev;
 	while (atual->id != old_id)
 	{
@@ -76,7 +77,16 @@ void rmNode(master* Master, int old_id)
 		atual = atual->next;
 	}
 
-	prev->next = atual->next;
+	if (atual == Master->start)
+		Master->start = atual->next;
+	else if (atual == Master->end)
+	{
+		prev->next = NULL;
+		Master->end = prev;
+	}
+	else
+		prev->next = atual->next;
+	
 	free(atual);
 }
 
@@ -84,7 +94,7 @@ void rmNode(master* Master, int old_id)
 
 void displayQueue(master* Master)
 {
-	node* atual = Master->end;
+	node* atual = Master->start;
 	while (atual != NULL)
 	{
 		printf("%d ", atual->id);
