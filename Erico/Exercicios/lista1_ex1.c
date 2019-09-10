@@ -3,6 +3,7 @@
 #include <string.h>
 
 
+
 int anagrama(char* p1, char* p2)
 {
 	int size1 = strlen(p1);
