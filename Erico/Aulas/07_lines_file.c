@@ -1,9 +1,9 @@
 #include <stdio.h>
 
-#define FILENAME "08_lines_file.c"
+#define FILENAME "07_lines_file.c"
 
 int main(){
-		FILE *fp;
+		FILE* fp;
 		char ch;
 		int linesCount=0;
 

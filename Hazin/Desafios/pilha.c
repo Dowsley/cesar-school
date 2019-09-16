@@ -92,3 +92,58 @@ void imprimir(node** topo)
 	}
 
 }
+
+void enfileirar(master* Master, int new_id)
+{
+	node* new_node = malloc(sizeof(node*));
+	new_node->id = new_id;
+	new_node->next = NULL;
+
+	if (Master->end == NULL && Master->start == NULL){
+		Master->end = new_node;
+		Master->start = new_node;
+	}
+
+	else{
+		node* atual = Master->end;
+		atual->next = new_node;
+		Master->end = new_node;
+	}
+}
+
+
+
+void desenfileirar(master* Master, int old_id)
+{
+	node* atual = Master->start;
+	node* prev;
+	while (atual->id != old_id)
+	{
+		prev = atual;
+		atual = atual->next;
+	}
+
+	if (atual == Master->start)
+		Master->start = atual->next;
+	else if (atual == Master->end)
+	{
+		prev->next = NULL;
+		Master->end = prev;
+	}
+	else
+		prev->next = atual->next;
+	
+	free(atual);
+}
+
+
+
+void displayQueue(master* Master)
+{
+	node* atual = Master->start;
+	while (atual != NULL)
+	{
+		printf("%d ", atual->id);
+		atual = atual->next;
+	}
+}
