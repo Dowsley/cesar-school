@@ -2,41 +2,39 @@
 #include <stdlib.h>
 #include <string.h>
 
-int par(int n)
+void par(int n)
 {
 	if ( (n%2) == 0 && n != 0)
 		printf("%d ", n);
 }
 
 
-int impar(int n)
+void impar(int n)
 {
 	if ( (n%2) != 0 && n != 0)
 		printf("%d ", n);
 }
 
-void callback(int* array, int (*p)(int))
+void callback(int* array, int len, void (*printNumber)(int))
 {
-	int len = sizeof(array) / sizeof(int);
 	for (int i = 0; i < len; i++)
-		(*p)(array[i]);
+		printNumber(array[i]);
 }
 
 int main(int argc, char *argv[])
 {
-	char choice = argv[0][0];
-	int len = argc - 1;
+	char choice = argv[1][0];
+
+	int len = argc - 2;
 	int* array = malloc(len * sizeof(int));
 
-	for (int i = 1; i < argc; i++)
-		array[i-1] = atoi(argv[i]);
+	for (int i = 2, j = 0; i < argc; i++, j++)
+		array[j] = atoi(argv[i]);
 
 	if (choice == 'p')
-		int (*p)(int) = &par;
+		callback(array, len, par);
 	else
-		int (*p)(int) = &impar;
-
-	callback(array, p);
+		callback(array, len, impar);
 
 	return 0;
 }
