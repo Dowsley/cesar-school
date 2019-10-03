@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct No{
+typedef struct No
+{
 	int valor;
 	int altura;
 	struct No* esquerda;
@@ -9,7 +10,7 @@ typedef struct No{
 	struct No* pai;
 }No;
 
-void procurar(int, No*);
+//void buscar(No*, int);
 void inserir(No**, int);
 int altura(No*);
 void atualizaAltura(No*);
@@ -36,25 +37,14 @@ int main()
 			inserir(&raiz, x);
 
 		else if (choice == 2)
-			procurar(x, raiz);
-			//printf("\n%d", procurar(x, raiz));
+			//buscar(raiz, x);
 	}
 
 	return 0;
 }
 
-void procurar(int valor, No* raiz)   // Procura "In". Deve retornar INT!!!!
-{
-	if (raiz != NULL)
-	{
-		procurar(valor, raiz->esquerda);
-		printf(" %d", raiz->valor);
-		procurar(valor, raiz->direita);
-	}
-}
 
-
-void inserir(No** raiz, int novo_valor)
+No* inserir(No** raiz, int novo_valor)
 {
 	No* novo_no = (No*)malloc(sizeof(No));
 	novo_no->valor = novo_valor;
