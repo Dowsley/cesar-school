@@ -48,3 +48,7 @@ curry' :: ((a,b) -> c) -> a-> b -> c
 curry' f a b = f (a,b)
 
 -- DESAFIO 12.2: FAZER FUNÇAO UNCURRY (RECEBE UM OPERADOR E UMA TUPLA, DEPOIS FAZ OPERAÇÃO --> (*) (3,2) == 6)
+
+uncurry' :: (a -> b -> c) -> (a,b) -> c
+uncurry' (op) (x,y) = op x y
+--FEITO!

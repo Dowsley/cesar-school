@@ -12,6 +12,7 @@ Prelude>
 teste :: [Int]->[Int]
 teste xs = (head xs): (xs !! 1):[ xs !! i | i<-[2..(length xs - 1)], (xs !! i) > (xs !! (i-2))]
 
+
 {-
 3. Defina uma função splitAndMult :: [Int] -> Int -> [[Int], [Int]], a qual
 recebe uma lista de números inteiros, e retorna uma tupla com 2 listas: a da esquerda com os
@@ -24,4 +25,5 @@ Prelude> separarEMultiplicarNumeros [2, 93, 7, 29, 62, 49, 47, 31, 94] 3
 Prelude>
 -}
 
-splitAndMult :: [Int] -> [Int] -> [[Int], [Int]]
+splitAndMult :: [Int] -> Int -> ([Int], [Int])
+splitAndMult x c = ([ xs | xs <- x, (xs `mod` 2) == 0 ], [ xs*c | xs <- x, (xs `mod` 2) /= 0 ])
