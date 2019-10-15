@@ -16,3 +16,8 @@ power x y = x * power x (y-1)
 bits :: Int -> Int
 bits 0 = 1
 bits x = 2 * bits (x-1)
+
+pal :: [Char] -> Bool
+pal [] = True
+pal xs | length(xs) > 1 = ((head xs) == (last xs)) && pal (tail (init xs))
+       | otherwise = True
