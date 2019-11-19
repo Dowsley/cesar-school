@@ -18,3 +18,9 @@ startOn :: [Char] -> Char -> [Char]
 startOn [] _ = []
 startOn (c:cs) s | s == c = cs
                  | otherwise = startOn cs s
+
+{-
+2. rmLarN
+-}
+
+rmLarN :: [Int] ->
