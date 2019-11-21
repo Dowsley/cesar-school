@@ -1,36 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct SQUARE{
+typedef struct RECT{
     int x1;
     int y1;
     int x2;
     int y2;
-}SQUARE;
+}RECT;
 
 int abs(int n);
-int area(SQUARE sqr);
+int area(RECT sqr);
+int howManyShapes(char filename[]);
+RECT* readShapes(RECT array[], char filename[], int size);
+RECT* newRect(int coords[4]);
 
-int main(int argc, char const *argv[])
+
+int main(int argc, char *argv[])
 {
-    SQUARE s1;
-    SQUARE s2;
-    SQUARE s3;
+    int n = howManyShapes(argv[1]);
+    RECT* rects = calloc(sizeof(RECT), n);
+    readShapes(rects, argv[1], n);
 
-    printf("\nSquare 1 first coord: ");
-    scanf("%d %d", &s1.x1, &s1.y1);
-    printf("\nSquare 1 second coord: ");
-    scanf("%d %d", &s1.x2, &s1.y2);
-
-    printf("\nSquare 2 first coord: ");
-    scanf("%d %d", &s2.x1, &s2.y1);
-    printf("\nSquare 2 second coord: ");
-    scanf("%d %d", &s2.x2, &s2.y2);
-
-    printf("%d\n", area(s1));
+    for (int i = 0; i < n; i++)
+        printf("%d %d %d %d\n", rects[i].x1, rects[i].y1, rects[i].x2, rects[i].y2);
 
     return 0;
 }
+
 
 // ABSOLUTE FUNCTION: Gets an number and returns its absolute value (modulus).
 int abs(int n)
@@ -40,19 +36,57 @@ int abs(int n)
     return n;
 }
 
-// Returns the area of an square.
-int area(SQUARE sqr)
+
+// Returns the area of an RECT.
+int area(RECT sqr)
 {
     int area = abs(sqr.x1 - sqr.x2) * abs(sqr.y1 - sqr.y2);
     return area;
 }
 
-int sumArea(SQUARE s1, SQUARE s2)
+
+int howManyShapes(char filename[])
 {
-    // If there's an intersection
-    if (s1.x > &&)
+    FILE* fp = fopen(filename, "r");
+    char ch;
+    int n;
+    while(ch=fgetc(fp) != EOF)
+        if (ch == '\n')
+            n++;
+    fclose(fp);
+    printf("%d", n);
+    return n;
+}
 
-    elif ()
+RECT* readShapes(RECT array[], char filename[], int size)
+{
+    FILE* fp = fopen(filename, "r");
+    int coords[4];
+    int count = 0;
+    int pos = 0;
 
-    return total;
+    while(fgetc(fp) != EOF)
+    {
+        fscanf(fp, "%d", &coords[count]);
+	printf("%d", coords[count]);
+        count++;
+        if (count % 4 == 0)
+        {
+            array[pos] = *(newRect(coords));
+            pos++;
+        }
+    }
+    fclose(fp);
+    return array;
+}
+
+RECT* newRect(int coords[4])
+{
+    RECT* new = malloc(sizeof(RECT));
+    new->x1 = coords[0];
+    new->y1 = coords[1];
+    new->x2 = coords[2];
+    new->y2 = coords[3];
+
+    return new;
 }
