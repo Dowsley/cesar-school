@@ -4,25 +4,21 @@
 
 int main(int argc, char* argv[])
 {
-    int aux;        // Salva numero do arquivo
-    int len1 = 1;   // Qtd de numeros na 1a linha (nao le o primeiro)
-    int len2 = 0;   // Qtd de numeros na 2a linha
-
     FILE* fp = fopen(argv[1], "r");
+    int head[2];
+    int tail[4];
 
-    /* CONTAGEM */
-    while (fgetc(fp) != '\n')
+    for(int i = 0; fscanf(fp, "%d", &head[i]); i++)
     {
-        fscanf(fp, "%d", &aux);
-        len1++;
-    }
-    while (fgetc(fp) != EOF)
-    {
-        fscanf(fp, "%d", &aux);
-        len2++;
+        if(fgetc(fp)=='\n')
+            break;
     }
 
-    printf("%d %d\n", len1, len2);
+    for(int i=0; fscanf(fp, "%d", &tail[i]); i++)
+    {
+        if(fgetc(fp)==EOF)
+            break;
+    }
 
     return 0;
 }
