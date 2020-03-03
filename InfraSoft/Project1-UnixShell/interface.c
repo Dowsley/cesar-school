@@ -14,21 +14,22 @@ int main(void)
     char buffer_out[MAX_LINE]; // Stores temporary parsed commands
     int param_pos = 0;         // Parameters position in the array (starts at args[0])
 
+    pid_t pid;
     while(should_run)
     {
         printf("osh>");
         fflush(stdout);
 
-        // Get user input.
+        // Gets user input
         fflush(stdin);
         fgets(buffer_in, MAX_LINE, stdin);
-        printf("Raw input: %s", buffer_in);
 
-        // Parse input.
+        // Parse input
         for (int i = 0, j = 0; i==i; i++, j++)
         {
-            // Parse keywords
             buffer_out[j] = buffer_in[i];
+
+            // Parse keywords (case 1: Space between commands)
             if (buffer_in[i] == ' '){
                 buffer_out[j] = '\0';
                 args[param_pos] = malloc((i+1) * sizeof(char));
@@ -37,20 +38,32 @@ int main(void)
                 j = -1;
             }
 
-            else if (buffer_in[i] == '\0'){
+            // Parse keywords (case 2: End of Stream)
+            else if (buffer_in[i] == '\n'){
+                buffer_out[j] = '\0';
                 args[param_pos] = malloc((i+1) * sizeof(char));
                 strcpy(args[param_pos], buffer_out);
+                param_pos++;
+                args[param_pos] = NULL; // Last parameter must be Null
                 break;
             }
-
         }
 
-        printf("Command: %s", args[0]);
+        /*printf("Command: %s", args[0]);
         for (int i = 1; i<=param_pos; i++){
             printf("\nParameter %d: %s", i, args[i]);
+        }*/
+
+        if (!strcmp("exit", args[0]))
+        {
+            should_run = 0;
         }
 
-        should_run = 0;
+        else
+        {
+            execvp(args[0], args);
+        }
+
         /**
         * After reading user input, the steps are:
         * (1) fork a child process using fork()
