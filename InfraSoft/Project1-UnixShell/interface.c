@@ -6,8 +6,16 @@
 
 #define MAX_LINE 80  // Tamanho máximo de comando
 
+void printCommand(char* com[MAX_LINE/2+1])
+{
+    for (int i = 0; com[i] != NULL; i++){
+        printf("%s", com[i]);
+		fflush(stdout);
+    }
+}
+
 // Retorna 1 se o último comando for &, 0 se não for.
-int getAndParseInput(char* args[MAX_LINE/2+1])
+int getAndParseInput(char* args[MAX_LINE/2+1], char* history_buffer[MAX_LINE/2+1])
 {
     char buffer_in[MAX_LINE];  // Stores the raw input
     char buffer_out[MAX_LINE]; // Stores temporary parsed commands
@@ -17,86 +25,112 @@ int getAndParseInput(char* args[MAX_LINE/2+1])
     fflush(stdin);
     fgets(buffer_in, MAX_LINE, stdin);
 
-    // Parse input
-    for (int i = 0, j = 0;; i++, j++)
+    // PARSE INPUT CASE 1: !!
+    if (buffer_in[0] == '!' && buffer_in[1] == '!' && buffer_in[3] == '\0')
     {
-        buffer_out[j] = buffer_in[i];
+        args[0] = malloc(3 * sizeof(char));
+        strcpy(args[0], "!!");
+        return 0;
+    }
+    
+    // PARSE INPUT CASE 2: Other command
+    else
+    {
+        for (int i = 0, j = 0;; i++, j++)
+        {
+            buffer_out[j] = buffer_in[i];
 
-        // Parse keywords (case 1: Space between commands)
-        if (buffer_in[i] == ' '){
-            buffer_out[j] = '\0';
-            args[param_pos] = malloc((i+1) * sizeof(char));
-            strcpy(args[param_pos], buffer_out);
-            param_pos++;  // Jumps to next param slot
-            j = -1;
-        }
-
-        // Parse keywords (case 2: End of Stream)
-        else if (buffer_in[i] == '\n'){
-            buffer_out[j] = '\0';
-            args[param_pos] = malloc((i+1) * sizeof(char));
-            strcpy(args[param_pos], buffer_out);
-            param_pos++;
-            args[param_pos] = NULL; // Last parameter must be Null
-
-            if (args[param_pos-1][0] == '&'){
-                args[param_pos-1] = NULL;
-                return 1;
+            // Parse keywords (case 1: Space between commands)
+            if (buffer_in[i] == ' '){
+                buffer_out[j] = '\0';
+                args[param_pos] = malloc((i+1) * sizeof(char));
+                strcpy(args[param_pos], buffer_out);
+                history_buffer[param_pos] = malloc((i+1) * sizeof(char));
+                strcpy(history_buffer[param_pos], buffer_out);
+                param_pos++;  // Jumps to next param slot
+                j = -1;
             }
-            else{
-                return 0;
+
+            // Parse keywords (case 2: End of Stream)
+            else if (buffer_in[i] == '\n'){
+                buffer_out[j] = '\0';
+                args[param_pos] = malloc((i+1) * sizeof(char));
+                strcpy(args[param_pos], buffer_out);
+                history_buffer[param_pos] = malloc((i+1) * sizeof(char));
+                strcpy(history_buffer[param_pos], buffer_out);
+                param_pos++;
+                args[param_pos] = NULL; // Last parameter must be Null
+                history_buffer[param_pos] = NULL; // Last parameter must be Null
+
+                if (args[param_pos-1][0] == '&'){
+                    args[param_pos] = NULL;
+                    history_buffer[param_pos] = NULL;
+                    
+                    return (param_pos-1); // Retorna posição do &
+                }
+                else{
+                    return 0;  // Não existe &
+                }
             }
         }
     }
 }
 
-/*void updateHistoryBuffer(char* args[MAX_LINE/2+1], char* history_buffer[MAX_LINE/2+1])
-{
-    // "cat a.txt &\0"
-    int size;
-    for (int i = 0; ; i++){
-        size = sizeof(args[i])/sizeof(char);
-        printf("\n[[%d]] = ", size);
-        history_buffer[i] = malloc(sizeof(char) * size);
-        strcpy(history_buffer[i], args[i]);
-        printf("{{%s -> %s}}", args[i], history_buffer[i]);
-    }
-}*/
-
 int main(void)
 {
     char* args[MAX_LINE/2+1];   // command line arguments
-    //char* history_buffer[MAX_LINE/2+1];
-    int isParallel;
+    char* history_buffer[MAX_LINE/2+1];
+    int parallel;
     pid_t pid;
 
+    history_buffer[0] = NULL;
     while(1)
     {
         printf("osh>");
         fflush(stdout);
 
-        isParallel = getAndParseInput(args);
-        //updateHistoryBuffer(args,history_buffer);
-
+        parallel = getAndParseInput(args, history_buffer);
         if (!strcmp("exit", args[0])){
             break;
         }
 
         pid = fork();
 
-        if (pid < 0){
+        if (pid < 0)    // Aborted child
+        {
             printf("<< ERROR: Child creation unsuccessfull >>");
             exit(0);
         }
 
-        else if (pid > 0){   // Pai: Espera entrada
-            if (!isParallel){
+        else if (pid > 0)   // Pai: Espera entrada
+        {   
+            if (!parallel){
                 wait(NULL);
             }
         }
 
-        else if (pid == 0){  // Filho: Executa comando
-            execvp(args[0], args);
+        else if (pid == 0)   // Filho: Executa comando
+        {
+            if (args[0][0] == '!' && args[0][1] == '!')
+            {
+                if (history_buffer[0] == NULL){
+                    printf("<< ERROR: No previous command used >>\n");
+					fflush(stdout);
+                    exit(0);
+                }
+                else{
+                    printCommand(history_buffer);
+                    if (parallel)
+                        history_buffer[parallel] = NULL;
+                    execvp(history_buffer[0],history_buffer);
+                }
+            }
+            else
+            {
+                if (parallel)
+                    args[parallel] = NULL;
+                execvp(args[0], args);
+            }
         }
 
         /*
