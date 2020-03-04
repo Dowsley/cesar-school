@@ -1,38 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
+//#include <unistd.h>
+//#include <sys/wait.h>
 #include <string.h>
 
 #define MAX_LINE 80  // Tamanho máximo de comando
 
-int parseInputs(char* args[MAX_LINE/2+1], char buffer[500]);
+void getInput(char buffer[MAX_LINE]);
+int parseInput(char* args[MAX_LINE/2+1], char buffer[MAX_LINE]);
 
 int main()
 {
-	pid_t pid;
+	//pid_t pid;
 	
 	char* args[MAX_LINE/2+1];
+	char buffer[MAX_LINE];
 	char history[MAX_LINE];
-	int size;
+	int argsize;
 	
-	// Gets input
-	char buffer[100];
-	fflush(stdin);
-	fgets(buffer,MAX_LINE,stdin);
-
-	for (int i = 0; ; i++)
+	getInput(buffer);  		   // Gets and inserts into the buffer.
+	argsize = parseInput(args,buffer); // Parses input and gets back the args size.
+	
+	// Updates history
+	if (!strcmp(args[0],"!!"))
 	{
-		if (buffer[i] == '\n'){
-			buffer[i] = '\0';
-			break;
-		}
+		strcpy(history,buffer);
 	}
-	
-	// Parses input
-	size = parseInputs(args,buffer);
-	
-	while(1)
+
+	/*while(1)
 	{
 		pid = fork();
 
@@ -52,16 +47,33 @@ int main()
 		}
 		
 		
-	}
+	}*/
     
 	return 0;
 }
 
-int parseInputs(char* args[MAX_LINE/2+1], char buffer[500])
+void getInput(char buffer[MAX_LINE])
+{
+	// Gets input
+	fflush(stdin);
+	fgets(buffer,MAX_LINE,stdin);
+	for (int i = 0; ; i++)
+	{
+		if (buffer[i] == '\n')
+		{
+			buffer[i] = '\0';
+			break;
+		}
+	}
+}
+
+int parseInput(char* args[MAX_LINE/2+1], char buffer[MAX_LINE])
 {
 	int size;
 	int pos = 0;
-	char* pc = strtok(buffer, " ");
+	char tempBuffer[MAX_LINE];
+	strcpy(tempBuffer,buffer);
+	char* pc = strtok(tempBuffer, " ");
 
 	while (pc != NULL)
 	{
