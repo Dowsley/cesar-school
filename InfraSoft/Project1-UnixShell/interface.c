@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <string.h>
 
 #define MAX_LINE 80  // Tamanho máximo de comando
@@ -10,8 +11,8 @@ void printCommand(char* com[MAX_LINE/2+1])
 {
     for (int i = 0; com[i] != NULL; i++){
         printf("%s", com[i]);
-		fflush(stdout);
     }
+    fflush(stdout);
 }
 
 // Retorna 1 se o último comando for &, 0 se não for.
@@ -95,10 +96,10 @@ int main(void)
         }
 
         pid = fork();
-
         if (pid < 0)    // Aborted child
         {
             printf("<< ERROR: Child creation unsuccessfull >>");
+            fflush(stdout);
             exit(0);
         }
 
