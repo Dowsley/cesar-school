@@ -17,6 +17,7 @@ int parseInput(char* args[MAX_LINE/2+1], char buffer[MAX_LINE]); // Transforms c
 int main()
 {
 	pid_t pid;
+	pid_t ppid;
 
 	char* args[MAX_LINE/2+1];
 	char buffer[MAX_LINE];
@@ -33,7 +34,7 @@ int main()
 
 		getInput(buffer);
 		if (!strcmp(buffer,"exit")) break;
-		if (strcmp(buffer,"!!")) strcpy(history,buffer);
+		if (strcmp(buffer,"!!")) strcpy(history,buffer); // updates history buffer, unless it's "!!"
 
 		pid = fork();
 
@@ -45,7 +46,7 @@ int main()
 
 		else if (pid > 0) // Parent
 		{
-			if (!(isParallel(buffer))) wait(NULL);
+			if (!(isParallel(buffer))) wait(NULL);  // Only goes parallel if "&" flag was detected inside inputs  
 		}
 
 		else if (pid == 0) // Child
@@ -59,11 +60,12 @@ int main()
 				if (history[0] == '\0')
 				{
 					printf("No commands in history.\n");
+					fflush(stdout);
 				}
 				else
 				{
 					strcpy(buffer,history);
-					argsize = parseInput(args,buffer); // Executes history 
+					argsize = parseInput(args,buffer); // Parses last used command into args. 
                     for (int i = 0; args[i] != NULL; i++)
                     {
                         printf("%s ",args[i]);
@@ -81,7 +83,7 @@ int main()
 			}
 
             // Redirect check
-            if ( (pos = findSymbol(args, ">")) > 0 ) // Console to file
+            if ( (pos = findSymbol(args, ">")) >= 0 ) // Console to file
             {
                 fd = open(args[pos+1], O_CREAT | O_WRONLY);
                 dup2(fd, STDOUT_FILENO);   
@@ -89,7 +91,7 @@ int main()
 
                 args[pos] = NULL;
             }
-            else if ( (pos = findSymbol(args,"<")) > 0 ) // File to console
+            else if ( (pos = findSymbol(args,"<")) >= 0 ) // File to console
             {
                 fd = open(args[pos+1], O_RDONLY);
                 dup2(fd, STDIN_FILENO);    
@@ -98,8 +100,64 @@ int main()
                 args[pos] = NULL;
             }
 
+			// Pipe call check
+			else if ((pos = findSymbol(args,"|")) >= 0)
+			{	
+				int fd[2];
 
-			execvp(args[0],args);
+				// Creating pipes
+				if (pipe(fd) == -1)
+				{
+					printf("Error: pipe failed");
+					fflush(stdout);
+					exit(1);
+				}
+
+				ppid = fork();
+				
+				if (ppid < 0)  // Error
+				{
+					printf("Error creating child");
+					fflush(stdout);
+				}
+				else if (ppid > 0) // Parent
+				{
+					close (fd[0]); // Closes useless read slot
+					dup2(fd[1],STDOUT_FILENO); // Transfer output (ls -l) to write slot
+					close(fd[1]);
+					//wait(NULL);
+					
+					// Rewrite command
+					args[pos] = NULL;
+					printf("[1[%s,%s,%s]]",args[0],args[1],args[2]);
+					fflush(stdout);
+				}
+				else if (ppid == 0) // Child
+				{
+					close(fd[1]); // Closes useless write slot
+					dup2(fd[0],STDIN_FILENO); // Gets input from parent from read slot
+					close(fd[0]);  
+								// 	    0  1 2   3   4
+					// Rewrite command ls -l | sort -a
+					for (int i = pos+1, j = 0; ; i++, j++)
+					{
+						if (args[i] == NULL)
+						{
+							args[j] = NULL;
+							break;
+						}
+						else
+						{
+							args[j] = malloc(strlen(args[i])+1 * sizeof(char));
+							strcpy(args[j],args[i]);
+						}
+					}
+					printf("[[%s,%s,%s]]",args[0],args[1],args[2]);
+					fflush(stdout);
+				}
+			}
+
+			execvp(args[0],args); // Sends everything to linux shell
 		}
 	}
     
@@ -156,8 +214,8 @@ int parseInput(char* args[MAX_LINE/2+1], char buffer[MAX_LINE])
 	int pos = 0;
 	char tempBuffer[MAX_LINE];
 	strcpy(tempBuffer,buffer);
+	
 	char* pc = strtok(tempBuffer, " ");
-
 	while (pc != NULL)
 	{
 		// Size count

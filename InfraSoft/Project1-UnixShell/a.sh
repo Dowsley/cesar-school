@@ -1,2 +1,2 @@
-sleep 2
+sleep 5
 echo "CONSEGUIMOS"
