@@ -2,22 +2,28 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <string.h>
+#include <fcntl.h>
 
-#define MAX_LINE 80  // Tamanho máximo de comando
+#define MAX_LINE 80  // Maximum length
 
-int isParallel(char* str);
-void getInput(char buffer[MAX_LINE]);
-int parseInput(char* args[MAX_LINE/2+1], char buffer[MAX_LINE]);
+int findSymbol(char* args[MAX_LINE/2+1], char* ch);  // Finds and returns position by (STRCMP)
+int isParallel(char* str);            // Checks if there is the "&" keyword
+void getInput(char buffer[MAX_LINE]); // Gets user input from keyboard and stores into the buffer;
+int parseInput(char* args[MAX_LINE/2+1], char buffer[MAX_LINE]); // Transforms command into readable args
 
 int main()
 {
 	pid_t pid;
-	
+
 	char* args[MAX_LINE/2+1];
 	char buffer[MAX_LINE];
 	char history[MAX_LINE];
-	int argsize;
+	int argsize; // Args size 
+    int fd;      // File descriptor
+    int pos;
 
 	history[0] = '\0';
 	while(1)
@@ -52,19 +58,47 @@ int main()
 			{
 				if (history[0] == '\0')
 				{
-					printf("ERROR: No previous command\n");
+					printf("No commands in history.\n");
 				}
 				else
 				{
 					strcpy(buffer,history);
 					argsize = parseInput(args,buffer); // Executes history 
+                    for (int i = 0; args[i] != NULL; i++)
+                    {
+                        printf("%s ",args[i]);
+                        fflush(stdout);
+                    }
+                    printf("\n");
+                    fflush(stdout);
 				}
 			}
-			
+            
+            // '&' Removal
 			if (!strcmp(args[argsize-1], "&"))
 			{
-				args[argsize-1] = NULL; // Remove & keyword
+				args[argsize-1] = NULL;
 			}
+
+            // Redirect check
+            if ( (pos = findSymbol(args, ">")) > 0 ) // Console to file
+            {
+                fd = open(args[pos+1], O_CREAT | O_WRONLY);
+                dup2(fd, STDOUT_FILENO);   
+                close(fd);
+
+                args[pos] = NULL;
+            }
+            else if ( (pos = findSymbol(args,"<")) > 0 ) // File to console
+            {
+                fd = open(args[pos+1], O_RDONLY);
+                dup2(fd, STDIN_FILENO);    
+                close(fd);
+
+                args[pos] = NULL;
+            }
+
+
 			execvp(args[0],args);
 		}
 	}
@@ -72,6 +106,22 @@ int main()
 	return 0;
 }
 
+// Return its position
+int findSymbol(char* args[MAX_LINE/2+1], char* ch)
+{
+    for (int i = 0; args[i] != NULL; i++)
+    {
+        if (!strcmp(args[i], ch))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+
+// Tells if the command is asking for parallelization
 int isParallel(char* str)
 {
 	for (int i = 0; ; i++)
@@ -83,6 +133,7 @@ int isParallel(char* str)
 	}
 }
 
+// Gets input from the keyboard and stores into the buffer
 void getInput(char buffer[MAX_LINE])
 {
 	// Gets input
@@ -98,6 +149,7 @@ void getInput(char buffer[MAX_LINE])
 	}
 }
 
+// Splits the input and inserts into the args. Returns the ARGS size.
 int parseInput(char* args[MAX_LINE/2+1], char buffer[MAX_LINE])
 {
 	int size;
