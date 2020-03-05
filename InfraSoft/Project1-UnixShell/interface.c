@@ -129,16 +129,14 @@ int main()
 					
 					// Rewrite command
 					args[pos] = NULL;
-					printf("[1[%s,%s,%s]]",args[0],args[1],args[2]);
-					fflush(stdout);
 				}
 				else if (ppid == 0) // Child
 				{
 					close(fd[1]); // Closes useless write slot
 					dup2(fd[0],STDIN_FILENO); // Gets input from parent from read slot
-					close(fd[0]);  
-								// 	    0  1 2   3   4
-					// Rewrite command ls -l | sort -a
+					close(fd[0]); 
+
+					// Rewrite command
 					for (int i = pos+1, j = 0; ; i++, j++)
 					{
 						if (args[i] == NULL)
@@ -149,11 +147,14 @@ int main()
 						else
 						{
 							args[j] = malloc(strlen(args[i])+1 * sizeof(char));
-							strcpy(args[j],args[i]);
+							for (int x = 0; ; x++)
+							{
+								args[j][x] = args[i][x];
+								if (args[i][x] == '\0')
+									break;
+							}
 						}
 					}
-					printf("[[%s,%s,%s]]",args[0],args[1],args[2]);
-					fflush(stdout);
 				}
 			}
 
