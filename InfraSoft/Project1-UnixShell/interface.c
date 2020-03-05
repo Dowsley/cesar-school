@@ -19,13 +19,14 @@ int main()
 	pid_t pid;
 	pid_t ppid;
 
+
 	char* args[MAX_LINE/2+1];
 	char buffer[MAX_LINE];
 	char history[MAX_LINE];
 	int argsize; // Args size 
     int fd;      // File descriptor
     int pos;
-
+	int pfd[2];
 	history[0] = '\0';
 	while(1)
 	{
@@ -103,10 +104,8 @@ int main()
 			// Pipe call check
 			else if ((pos = findSymbol(args,"|")) >= 0)
 			{	
-				int fd[2];
-
 				// Creating pipes
-				if (pipe(fd) == -1)
+				if (pipe(pfd) == -1)
 				{
 					printf("Error: pipe failed");
 					fflush(stdout);
@@ -120,21 +119,11 @@ int main()
 					printf("Error creating child");
 					fflush(stdout);
 				}
-				else if (ppid > 0) // Parent
+				// EXAMPLE: ls | sort
+				else if (ppid > 0) // Parent (sort)
 				{
-					close (fd[0]); // Closes useless read slot
-					dup2(fd[1],STDOUT_FILENO); // Transfer output (ls -l) to write slot
-					close(fd[1]);
-					//wait(NULL);
-					
-					// Rewrite command
-					args[pos] = NULL;
-				}
-				else if (ppid == 0) // Child
-				{
-					close(fd[1]); // Closes useless write slot
-					dup2(fd[0],STDIN_FILENO); // Gets input from parent from read slot
-					close(fd[0]); 
+					dup2(pfd[0],STDIN_FILENO); // Reads input to use as args to SORT
+					close(pfd[1]);
 
 					// Rewrite command
 					for (int i = pos+1, j = 0; ; i++, j++)
@@ -155,10 +144,23 @@ int main()
 							}
 						}
 					}
+
+					fflush(stdout);
+
+					wait(NULL);
+				}
+				else if (ppid == 0) // Child (ls)
+				{
+					dup2(pfd[1],STDOUT_FILENO); // Writes output os LS command
+					close(pfd[0]); 
+						
+					// Rewrite command
+					args[pos] = NULL;
 				}
 			}
 
 			execvp(args[0],args); // Sends everything to linux shell
+			exit(0);
 		}
 	}
     
