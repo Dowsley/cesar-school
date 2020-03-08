@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/wait.h>
+//#include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
@@ -19,14 +19,14 @@ int main()
 	pid_t pid;
 	pid_t ppid;
 
-
-	char* args[MAX_LINE/2+1];
-	char buffer[MAX_LINE];
-	char history[MAX_LINE];
-	int argsize; // Args size 
-    int fd;      // File descriptor
-    int pos;
-	int pfd[2];
+	char* args[MAX_LINE/2+1]; // Standard input format for shell command execution
+	char buffer[MAX_LINE];    // Temporary buffer to store user input
+	char history[MAX_LINE];   // Temporary place to hold the last used command
+	int argsize; 		  // Args size 
+    	int fd;      		  // File descriptor
+    	int pos;		  // Temporary position holder  
+	int pfd[2];		  // Pipe file descriptor
+	
 	history[0] = '\0';
 	while(1)
 	{
@@ -67,39 +67,39 @@ int main()
 				{
 					strcpy(buffer,history);
 					argsize = parseInput(args,buffer); // Parses last used command into args. 
-                    for (int i = 0; args[i] != NULL; i++)
-                    {
-                        printf("%s ",args[i]);
-                        fflush(stdout);
-                    }
-                    printf("\n");
-                    fflush(stdout);
+					for (int i = 0; args[i] != NULL; i++)
+					{
+						printf("%s ",args[i]);
+						fflush(stdout);
+					}
+					printf("\n");
+					fflush(stdout);
 				}
 			}
             
-            // '&' Removal
+            		// '&' Removal
 			if (!strcmp(args[argsize-1], "&"))
 			{
 				args[argsize-1] = NULL;
 			}
 
-            // Redirect check
-            if ( (pos = findSymbol(args, ">")) >= 0 ) // Console to file
-            {
-                fd = open(args[pos+1], O_CREAT | O_WRONLY);
-                dup2(fd, STDOUT_FILENO);   
-                close(fd);
+			// Redirect check
+			if ( (pos = findSymbol(args, ">")) >= 0 ) // Console to file
+			{
+				fd = open(args[pos+1], O_CREAT | O_WRONLY);
+				dup2(fd, STDOUT_FILENO);   
+				close(fd);
 
-                args[pos] = NULL;
-            }
-            else if ( (pos = findSymbol(args,"<")) >= 0 ) // File to console
-            {
-                fd = open(args[pos+1], O_RDONLY);
-                dup2(fd, STDIN_FILENO);    
-                close(fd);
+				args[pos] = NULL;
+			}
+			else if ( (pos = findSymbol(args,"<")) >= 0 ) // File to console
+			{
+				fd = open(args[pos+1], O_RDONLY);
+				dup2(fd, STDIN_FILENO);    
+				close(fd);
 
-                args[pos] = NULL;
-            }
+				args[pos] = NULL;
+			}
 
 			// Pipe call check
 			else if ((pos = findSymbol(args,"|")) >= 0)
@@ -145,8 +145,6 @@ int main()
 						}
 					}
 
-					fflush(stdout);
-
 					wait(NULL);
 				}
 				else if (ppid == 0) // Child (ls)
@@ -159,7 +157,7 @@ int main()
 				}
 			}
 
-			execvp(args[0],args); // Sends everything to linux shell
+			execvp(args[0],args); // Sends everything to unix shell
 			exit(0);
 		}
 	}
