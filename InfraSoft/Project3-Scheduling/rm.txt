@@ -1,0 +1,23 @@
+EXECUTION BY RM
+
+[T1] for 25 units - F
+[T2] for 25 units - H
+[T1] for 25 units - F
+[T2] for 5 units - L
+[T2] for 20 units - H
+[T1] for 25 units - F
+[T2] for 15 units - F
+idle for 10 units
+[T1] for 15 units - K
+
+LOST DEADLINES
+[T1] 0
+[T2] 1
+
+COMPLETE EXECUTION
+[T1] 3
+[T2] 1
+
+KILLED
+[T1] 1
+[T2] 1

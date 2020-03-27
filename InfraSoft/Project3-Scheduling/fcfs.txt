@@ -1,0 +1,56 @@
+EXECUTION BY FCFS
+
+[T8] for 25 units
+[T7] for 30 units
+[T6] for 10 units
+[T5] for 20 units
+[T4] for 15 units
+[T3] for 25 units
+[T2] for 25 units
+[T1] for 20 units
+
+METRICS
+
+[T8]
+Turnaround time: 25
+Waiting time: 0
+Response time: 0
+
+[T7]
+Turnaround time: 55
+Waiting time: 25
+Response time: 25
+
+[T6]
+Turnaround time: 65
+Waiting time: 55
+Response time: 55
+
+[T5]
+Turnaround time: 85
+Waiting time: 65
+Response time: 65
+
+[T4]
+Turnaround time: 100
+Waiting time: 85
+Response time: 85
+
+[T3]
+Turnaround time: 125
+Waiting time: 100
+Response time: 100
+
+[T2]
+Turnaround time: 150
+Waiting time: 125
+Response time: 125
+
+[T1]
+Turnaround time: 170
+Waiting time: 150
+Response time: 150
+
+Average turnaround time = 96.88
+Average waiting time = 75.62
+Average response time = 75.62
