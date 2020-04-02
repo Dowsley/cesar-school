@@ -1,2 +1,4 @@
-all: sta_jfcd.c
-	gcc sta_jfcd.c -o sta_jfcd -lpthread
+1: sta_jfcd.c
+	gcc sta_jfcd.c -o a -lpthread
+2: other.c
+	gcc other.c -o a -lpthread
