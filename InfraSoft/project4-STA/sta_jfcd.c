@@ -7,7 +7,7 @@
 
 pthread_mutex_t mutex_chairs; /* Controls access to number of chairs taken.*/
 int used_chairs = 0;
-int c = 0; /* Chair index on array */
+int c = 0; /* Chair index offset on array */
 
 pthread_mutex_t mutex_stds; /* Controls access to the number of active students (tasks).*/
 int active_students;
@@ -27,19 +27,19 @@ void log_msg(int pid, char *msg)
 
 
 /* Simulates TA as a running thread (task) */
-void *ta_task(void *arg) /* TODO: Comment */
+void *ta_task(void *arg)
 {
         printf("TA is sleeping.\n");
         while (1) {
                 /* Waiting for student to awaken him */
                 sem_wait(&sem_ta_sleep);
-                printf("Student #%d is awaking the TA.\n", waking_student); // UNSTABLE: Global
+                printf("Student #%d is awaking the TA.\n", waking_student); /* UNSTABLE: Global */
                 fflush(stdout);
                
-                // awake cycle
+                /* Awake cycle */
                 while (1) {
 
-                        // Check if there is any student waiting.
+                        /* Check if there is any student waiting. */
                         pthread_mutex_lock(&mutex_chairs);
                         if (used_chairs == 0) {
                                 pthread_mutex_unlock(&mutex_chairs);
@@ -48,16 +48,16 @@ void *ta_task(void *arg) /* TODO: Comment */
                                 break;
                         }
 
-                        sem_post(&sem_chairs[c]); // Notify students that the room is free.
+                        sem_post(&sem_chairs[c]); /* Notify students that the room is free. */
                         used_chairs--;
-                        c = (c + 1) % 3; /* TODO: Review */
+                        c = (c + 1) % 3; /* Increment the chair index offset */
                         pthread_mutex_unlock(&mutex_chairs);
 
 
-                        sleep(rand() % 10 + 1);  // Assisting student...
-                        sem_post(&sem_std);     // Notify that assistance is over
+                        sleep(rand() % 5 + 1); /* Assisting student */
+                        sem_post(&sem_std);     /* Notify that assistance is over */
 
-                        // Check if all students were assisted.
+                        /* Check if all students were assisted. */
                         pthread_mutex_lock(&mutex_stds);
                         active_students--;
                         if (active_students == 0) {
@@ -76,7 +76,7 @@ void *student_task(void *arg)
         int tmp;
         while(1) {
                 /* Entry section (Student programming for random time) */
-                sleep(rand() % 10 + 1);
+                sleep(rand() % 5 + 1);
                 printf("Student #%d is going to TA room.\n", id);
                 fflush(stdout);
 
@@ -95,7 +95,7 @@ void *student_task(void *arg)
 
                         /* Takes seat */
                         pthread_mutex_lock(&mutex_chairs);
-                        tmp = (c + used_chairs) % 3; /* Where he is sitting next */ /* TODO: Review */
+                        tmp = (c + used_chairs) % 3; /* Where he is sitting next */
                         used_chairs++;
                         printf("Student #%d sat on chair #%d. %d chair(s) remain.\n",id,tmp+1,3 - used_chairs);
                         fflush(stdout);
@@ -155,5 +155,14 @@ int main(int argc, char const *argv[])
         printf("TA went back to sleep.\n");
         printf("There is no more students to help. TA left the room.\n");
         fflush(stdout);
+
+        /* Memory cleanup */
+        pthread_mutex_destroy(&mutex_chairs);
+        pthread_mutex_destroy(&mutex_stds);
+        sem_destroy(&sem_ta_sleep);
+        for (int i = 0; i < 3; i++) {
+                sem_destroy(&sem_chairs[i]);
+        }
+
         return 0;
 }
