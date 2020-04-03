@@ -3,7 +3,6 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
-#include <time.h>
 
 pthread_mutex_t mutex_chairs; /* Controls access to number of chairs taken.*/
 int used_chairs = 0;
