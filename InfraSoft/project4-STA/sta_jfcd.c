@@ -5,40 +5,36 @@
 #include <unistd.h>
 #include <time.h>
 
-// TODO - Fflushes
-// TODO - /* comments */ 
-
-// Controls access to number of chairs taken.
-pthread_mutex_t mutex_chairs;
+pthread_mutex_t mutex_chairs; /* Controls access to number of chairs taken.*/
 int used_chairs = 0;
-int c = 0; // Goes from 0 to 2 (Chair index)
+int c = 0; /* Chair index on array */
 
-// Controls access to the number of active students (tasks).
-pthread_mutex_t mutex_stds;
+pthread_mutex_t mutex_stds; /* Controls access to the number of active students (tasks).*/
 int active_students;
 
-sem_t sem_ta_sleep;   // Signal for TA sleep 
-sem_t sem_std;        // Signal for student assistance end
-sem_t sem_chairs[3];  // Signal for chair call.
+sem_t sem_ta_sleep;   /* Signal for TA sleep */
+sem_t sem_std;        /* Signal for ending student's assistance */
+sem_t sem_chairs[3];  /* Signal for chair call. */
 
 int waking_student;  /* Who woke up the TA */
-int sitting_student; /* Who got in the seat */
 
 
 void log_msg(int pid, char *msg)
 {
         printf("[%d] %li: %s\n", pid, time(NULL), msg);
+        fflush(stdout);
 }
 
-// Simulates TA assistance as a task.
-void *ta_task(void *arg)
+
+/* Simulates TA as a running thread (task) */
+void *ta_task(void *arg) /* TODO: Comment */
 {
-        //int randtime;
         printf("TA is sleeping.\n");
         while (1) {
-                // Waiting for student to awaken him...
+                /* Waiting for student to awaken him */
                 sem_wait(&sem_ta_sleep);
                 printf("Student #%d is awaking the TA.\n", waking_student); // UNSTABLE: Global
+                fflush(stdout);
                
                 // awake cycle
                 while (1) {
@@ -47,91 +43,94 @@ void *ta_task(void *arg)
                         pthread_mutex_lock(&mutex_chairs);
                         if (used_chairs == 0) {
                                 pthread_mutex_unlock(&mutex_chairs);
-                                printf("TA went back to sleep.\n"); 
+                                printf("TA went back to sleep.\n");
+                                fflush(stdout);
                                 break;
                         }
 
                         sem_post(&sem_chairs[c]); // Notify students that the room is free.
                         used_chairs--;
-                        //printf("Student left his/her chair. Remaining Chairs %d\n", 3 - used_chairs);
-                        c = (c + 1) % 3;
+                        c = (c + 1) % 3; /* TODO: Review */
                         pthread_mutex_unlock(&mutex_chairs);
 
 
-                        sleep(rand() % 5 + 1);  // Assisting student...
+                        sleep(rand() % 10 + 1);  // Assisting student...
                         sem_post(&sem_std);     // Notify that assistance is over
 
                         // Check if all students were assisted.
                         pthread_mutex_lock(&mutex_stds);
                         active_students--;
-                        //sleep(1);
                         if (active_students == 0) {
-                                return NULL;
+                               return NULL;
                         }
                         pthread_mutex_unlock(&mutex_stds);
                 }
         }
 }
 
-// Simulates student as a task. Gets student number as unique arg.
+
+/* Simulates student as a running task. Gets student id as unique arg. */
 void *student_task(void *arg)
 {
         int id = *(int *) arg;
-        int randtime;
+        int tmp;
         while(1) {
-                // Entry section (Student programming)
-                randtime = rand() % 5 + 1;
-                sleep(randtime);
+                /* Entry section (Student programming for random time) */
+                sleep(rand() % 10 + 1);
+                printf("Student #%d is going to TA room.\n", id);
+                fflush(stdout);
 
-                // Check for available chairs and take action (Critical section)
-                printf("Student #%d is going to TA room (after waiting %d)\n", id ,randtime); // TODO :  - rm debug
-
+                /* Check for available chairs and take action (Critical section) */
                 pthread_mutex_lock(&mutex_chairs);
-                int tmp = used_chairs;
+                tmp = used_chairs;
                 pthread_mutex_unlock(&mutex_chairs);
-        
+
+                /* CASE 1: There's enough space. */
                 if (tmp < 3) {
                         if (tmp == 0) {
-                                // CASE 1: Empty chairs. Wake up TA.
+                                /* Empty chairs. TA may be sleeping: Try to wake him up. */
                                 waking_student = id;
-                                sem_post(&sem_ta_sleep); // Notifies TA (wake him up)
-
+                                sem_post(&sem_ta_sleep);
                         }
 
+                        /* Takes seat */
                         pthread_mutex_lock(&mutex_chairs);
-                        int index = (c + used_chairs) % 3;
+                        tmp = (c + used_chairs) % 3; /* Where he is sitting next */ /* TODO: Review */
                         used_chairs++;
-                        printf("Student #%d sat on chair #%d. %d chair(s) remain.\n",id,index+1,3 - used_chairs); // FIXME: FOREIGN
+                        printf("Student #%d sat on chair #%d. %d chair(s) remain.\n",id,tmp+1,3 - used_chairs);
+                        fflush(stdout);
                         pthread_mutex_unlock(&mutex_chairs);
 
-                        sem_wait(&sem_chairs[index]);  // Waits for TA to call.
-                        printf("Student %d is getting help from the TA.\n", id);
-                        
-                        // Waits for own assistance to finish
+                        /* Waits for TA to call the student. */
+                        sem_wait(&sem_chairs[tmp]);
+                        printf("TA is teaching student #%d.\n", id);
+
+                        /* Waits for time with TA to finish */
                         sem_wait(&sem_std);
                         printf("TA finished teaching student #%d.\n", id);
+                        fflush(stdout);
                         printf("Student #%d left TA room.\n", id);
+                        fflush(stdout);
 
-                        // EXIT POINT
                         return NULL;
                 } else {
-                        // CASE 3: Goes back to programming
+                        /* CASE 2: Not enough space. Student will come back later. */
                         printf("There is no available chair to student %d. The student will return late.\n", id);
                 }
         }
 }
 
+
 int main(int argc, char const *argv[])
 {
-        int n = atoi(argv[1]); // Number of students
+        int n = atoi(argv[1]); /* Starting number of students */
         active_students = n;
-	pthread_t stds_tid[n];
-        pthread_t ta;
-        
 
-        srand(time(NULL));
+        pthread_t ta;          /* TA task id */
+	pthread_t stds_tid[n]; /* Student task ids */
+        int stds_num[n];       /* Student numbers/names (ids) */
 
-        // Initialize signalers
+
         sem_init(&sem_ta_sleep, 0, 0);
         sem_init(&sem_std, 0, 0);
         for (int i = 0; i<3; i++) {
@@ -140,19 +139,21 @@ int main(int argc, char const *argv[])
         pthread_mutex_init(&mutex_chairs, NULL);
         pthread_mutex_init(&mutex_stds, NULL);
 
-        // Run tasks
-        int stds_num[n];
+        /* Run tasks */
+        srand(time(NULL));
         pthread_create(&ta,NULL,ta_task,NULL);
         for (int i = 1; i<=n; i++) {
                 stds_num[i] = i;
                 pthread_create(&stds_tid[i],NULL,student_task,(void *) &stds_num[i]);
         }
 
-        // Join tasks
+        /* Wait for tasks to finish */
         pthread_join(ta, NULL);
         for (int i = 1; i<=n; i++) {
                 pthread_join(stds_tid[i], NULL);
         }
+        printf("TA went back to sleep.\n");
         printf("There is no more students to help. TA left the room.\n");
+        fflush(stdout);
         return 0;
 }
