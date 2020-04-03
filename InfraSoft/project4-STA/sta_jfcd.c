@@ -64,9 +64,8 @@ void *ta_task(void *arg)
                         // Check if all students were assisted.
                         pthread_mutex_lock(&mutex_stds);
                         active_students--;
-                        sleep(1);
+                        //sleep(1);
                         if (active_students == 0) {
-                                printf("There is no more students to help. TA left the room.\n");
                                 return NULL;
                         }
                         pthread_mutex_unlock(&mutex_stds);
@@ -97,16 +96,12 @@ void *student_task(void *arg)
                                 waking_student = id;
                                 sem_post(&sem_ta_sleep); // Notifies TA (wake him up)
 
-                        } else {
-                                // CASE 2: Free chair, sits and wait for TA room to free up
-                                printf("Student %d sat on a chair waiting for the TA to finish. \n", id); // FIXME: FOREIGN
-
                         }
 
                         pthread_mutex_lock(&mutex_chairs);
                         int index = (c + used_chairs) % 3;
                         used_chairs++;
-                        printf("Student sat on chair. Chairs Remaining: %d\n", 3 - used_chairs); // FIXME: FOREIGN
+                        printf("Student #%d sat on chair #%d. %d chair(s) remain.\n",id,index+1,3 - used_chairs); // FIXME: FOREIGN
                         pthread_mutex_unlock(&mutex_chairs);
 
                         sem_wait(&sem_chairs[index]);  // Waits for TA to call.
@@ -158,6 +153,6 @@ int main(int argc, char const *argv[])
         for (int i = 1; i<=n; i++) {
                 pthread_join(stds_tid[i], NULL);
         }
-
+        printf("There is no more students to help. TA left the room.\n");
         return 0;
 }
