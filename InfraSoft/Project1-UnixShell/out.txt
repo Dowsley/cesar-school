@@ -1,5 +1,0 @@
-a.out
-a.sh
-interface.c
-in.txt
-out.txt
