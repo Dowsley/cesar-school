@@ -14,6 +14,6 @@ public class RepositorioLeituraImplTest {
 		LeituraPressao leitura = new LeituraPressao();
 		leitura.setDispositivo(dispositivo);
 		repositorio.cadastrarLeitura(leitura);
-		assertThat(repositorio.listarLeituras(dispositivo), hasEntry(leitura));
+		assertThat(repositorio.listarLeituras(dispositivo), hasItem(leitura));
 	}
 }

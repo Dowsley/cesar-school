@@ -167,7 +167,8 @@ public class FrameClientes extends JFrame {
 					cliente.setCpf(txtCPF.getText());
 					cliente.setVip(ckbVIP.isSelected());
 					cliente.setIdade((Integer) spnIdade.getValue()); 
-					cliente.setRenda((Double) spnRenda.getValue()); 
+					cliente.setRenda((Double) spnRenda.getValue());
+					repositorioCliente.cadastrarCliente(cliente);
 				} catch (Exception ex) {
 					JOptionPane.showMessageDialog(null, ex.getMessage());
 				}
@@ -225,7 +226,7 @@ public class FrameClientes extends JFrame {
 					Cliente recuperado = repositorioCliente.recuperarCliente(txtCPFRecuperar.getText());
 					lblNome.setText(recuperado.getNome());
 					lblCPF.setText(recuperado.getCpf());
-					lblVIP.setText(recuperado.isVip() ? "Sim" : "Não");
+					lblVIP.setText(recuperado.isVip() ? "Sim" : "Nï¿½o");
 					lblIdade.setText(String.format("%d anos", recuperado.getIdade()));
 					lblRenda.setText(String.format("R$ %32.2f", recuperado.getRenda()));
 				} catch (Exception ex) {

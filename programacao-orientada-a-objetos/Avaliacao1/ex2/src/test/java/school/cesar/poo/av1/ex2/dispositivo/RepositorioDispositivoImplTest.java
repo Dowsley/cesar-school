@@ -6,7 +6,7 @@ import static org.hamcrest.Matchers.equalTo;
 import org.junit.Test;
 public class RepositorioDispositivoImplTest {
 	@Test
-	public void testArmazenaCorretamenteUmDispositivo() {
+	public void testArmazenaCorretamenteUmDispositivo() throws DispositivoException {
 		Dispositivo dispositivo = new Dispositivo();
 		String macAddress = "a0:a0:a0:a0:a0:a0";
 		dispositivo.setMacAddress(macAddress);
@@ -17,7 +17,7 @@ public class RepositorioDispositivoImplTest {
 
 
 	@Test(expected = DispositivoException.class)
-	public void testNaoArmazenaDispositivosComMesmoMacAddress() {
+	public void testNaoArmazenaDispositivosComMesmoMacAddress() throws DispositivoException {
 		Dispositivo dispositivo1 = new Dispositivo();
 		Dispositivo dispositivo2 = new Dispositivo();
 		String macAddress = "a0:a0:a0:a0:a0:a0";
