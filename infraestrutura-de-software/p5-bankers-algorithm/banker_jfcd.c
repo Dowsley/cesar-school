@@ -65,6 +65,9 @@ int main(int argc, const char *argv[])
                 /* If "*" -> Output state into file */
                 if (!strcmp(cmd[0], "*")) {
                         output_state();
+                        for (int i = 0; i < (3 + m); i++){
+                                free(cmd[i]);
+                        }
                         continue;
                 }
 
@@ -80,11 +83,20 @@ int main(int argc, const char *argv[])
                 }
                 else if (!strcmp(cmd[0], "RL")) {
                         release_resources(customer_num,  resources);
-                }   
+                }
+                for (int i = 0; i < (3 + m); i++){
+                        free(cmd[i]);
+                }
         }
 
         /* Bankers finished: Clear memory */
         fclose(fp_cmd);
+        for (int i = 0; i < n; i++) {
+                free(maximum[i]);
+                free(allocation[i]);
+                free(need[i]);
+        }
+        free(cmd);
         free(available);  /* The available amount of each resource */
         free(maximum);    /* the maximum demand of each customer */
         free(allocation); /* the amount currently allocated to each customer */
@@ -246,7 +258,6 @@ void read_commands(char **cmd, FILE *fp)
         char buffer[264]; /* Arbitrary maximum size for a command */
 
         /* Gets input */
-        char ch;
         for (int i = 0; !feof(fp); i++) {
                 buffer[i] = fgetc(fp);
                 if (buffer[i] == '\n' || buffer[i] == EOF) {
@@ -333,7 +344,6 @@ void output_state(void)
 *   1 = SUCC: Release */
 void output_result(int cust_num, int resources[], int code)
 {
-        int n = number_of_customers;
         int m = number_of_resources;
 
         FILE *fp_out = fopen("result.txt", "a");
@@ -384,7 +394,6 @@ void output_result(int cust_num, int resources[], int code)
         }
         /* SUCCESS: Release resources */
         else if (code == 1) {
-                "Release from customer %d the resources %d %d %d";
                 fprintf(fp_out, 
                         "Release from customer %d the resources ", 
                         cust_num);

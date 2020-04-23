@@ -1,0 +1,135 @@
+==15416== Memcheck, a memory error detector
+==15416== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==15416== Using Valgrind-3.15.0-608cb11914-20190413 and LibVEX; rerun with -h for copyright info
+==15416== Command: ./banker 10 5 7
+==15416== Parent PID: 409
+==15416== 
+--15416-- 
+--15416-- Valgrind options:
+--15416--    --leak-check=full
+--15416--    --show-leak-kinds=all
+--15416--    --track-origins=yes
+--15416--    --verbose
+--15416--    --log-file=valgrind-out.txt
+--15416-- Contents of /proc/version:
+--15416--   Linux version 4.4.0-18362-Microsoft (Microsoft@Microsoft.com) (gcc version 5.4.0 (GCC) ) #476-Microsoft Fri Nov 01 16:53:00 PST 2019
+--15416-- 
+--15416-- Arch and hwcaps: AMD64, LittleEndian, amd64-cx16-lzcnt-rdtscp-sse3-ssse3-avx-avx2-bmi-f16c-rdrand
+--15416-- Page sizes: currently 4096, max supported 4096
+--15416-- Valgrind library directory: /usr/local/lib/valgrind
+--15416-- Reading syms from /mnt/c/Users/joaod/desktop/code/cesar-school/infraestrutura-de-software/p5-bankers-algorithm/banker
+--15416-- Reading syms from /lib/x86_64-linux-gnu/ld-2.27.so
+--15416--   Considering /lib/x86_64-linux-gnu/ld-2.27.so ..
+--15416--   .. CRC mismatch (computed 1b7c895e wanted 2943108a)
+--15416--   Considering /usr/lib/debug/lib/x86_64-linux-gnu/ld-2.27.so ..
+--15416--   .. CRC is valid
+--15416-- Reading syms from /usr/local/lib/valgrind/memcheck-amd64-linux
+--15416--    object doesn't have a dynamic symbol table
+--15416-- Scheduler: using generic scheduler lock implementation.
+--15416-- Reading suppressions file: /usr/local/lib/valgrind/default.supp
+==15416== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-15416-by-fell-on-???
+==15416== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-15416-by-fell-on-???
+==15416== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-15416-by-fell-on-???
+==15416== 
+==15416== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==15416== don't want to do, unless you know exactly what you're doing,
+==15416== or are doing some strange experiment):
+==15416==   /usr/local/lib/valgrind/../../bin/vgdb --pid=15416 ...command...
+==15416== 
+==15416== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==15416==   /path/to/gdb ./banker
+==15416== and then give GDB the following command
+==15416==   target remote | /usr/local/lib/valgrind/../../bin/vgdb --pid=15416
+==15416== --pid is optional if only one valgrind process is running
+==15416== 
+==15416== error calling PR_SET_PTRACER, vgdb might block
+--15416-- REDIR: 0x401f2f0 (ld-linux-x86-64.so.2:strlen) redirected to 0x580dd1d2 (vgPlain_amd64_linux_REDIR_FOR_strlen)
+--15416-- REDIR: 0x401f0d0 (ld-linux-x86-64.so.2:index) redirected to 0x580dd1ec (vgPlain_amd64_linux_REDIR_FOR_index)
+--15416-- Reading syms from /usr/local/lib/valgrind/vgpreload_core-amd64-linux.so
+--15416-- Reading syms from /usr/local/lib/valgrind/vgpreload_memcheck-amd64-linux.so
+==15416== WARNING: new redirection conflicts with existing -- ignoring it
+--15416--     old: 0x0401f2f0 (strlen              ) R-> (0000.0) 0x580dd1d2 vgPlain_amd64_linux_REDIR_FOR_strlen
+--15416--     new: 0x0401f2f0 (strlen              ) R-> (2007.0) 0x04c33280 strlen
+--15416-- REDIR: 0x401d360 (ld-linux-x86-64.so.2:strcmp) redirected to 0x4c343b0 (strcmp)
+--15416-- REDIR: 0x401f830 (ld-linux-x86-64.so.2:mempcpy) redirected to 0x4c380e0 (mempcpy)
+--15416-- Reading syms from /lib/x86_64-linux-gnu/libc-2.27.so
+--15416--   Considering /lib/x86_64-linux-gnu/libc-2.27.so ..
+--15416--   .. CRC mismatch (computed b1c74187 wanted 042cc048)
+--15416--   Considering /usr/lib/debug/lib/x86_64-linux-gnu/libc-2.27.so ..
+--15416--   .. CRC is valid
+--15416-- REDIR: 0x4edbc70 (libc.so.6:memmove) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edad40 (libc.so.6:strncpy) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbf50 (libc.so.6:strcasecmp) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4eda790 (libc.so.6:strcat) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edad70 (libc.so.6:rindex) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edd7c0 (libc.so.6:rawmemchr) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4efa410 (libc.so.6:wmemchr) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbde0 (libc.so.6:mempcpy) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbc10 (libc.so.6:bcmp) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edad00 (libc.so.6:strncmp) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4eda800 (libc.so.6:strcmp) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbd40 (libc.so.6:memset) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4ef90f0 (libc.so.6:wcschr) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edaca0 (libc.so.6:strnlen) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4eda870 (libc.so.6:strcspn) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbfa0 (libc.so.6:strncasecmp) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4eda840 (libc.so.6:strcpy) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edc0e0 (libc.so.6:memcpy@@GLIBC_2.14) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4efb6c0 (libc.so.6:wcsnlen) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edada0 (libc.so.6:strpbrk) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4eda7c0 (libc.so.6:index) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edac70 (libc.so.6:strlen) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4ee56c0 (libc.so.6:memrchr) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbff0 (libc.so.6:strcasecmp_l) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbbe0 (libc.so.6:memchr) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4ef9eb0 (libc.so.6:wcslen) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edb050 (libc.so.6:strspn) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbf20 (libc.so.6:stpncpy) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edbef0 (libc.so.6:stpcpy) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edd7f0 (libc.so.6:strchrnul) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4edc040 (libc.so.6:strncasecmp_l) redirected to 0x4a2a6de (_vgnU_ifunc_wrapper)
+--15416-- REDIR: 0x4fcb3c0 (libc.so.6:__strrchr_avx2) redirected to 0x4c32c00 (rindex)
+--15416-- REDIR: 0x4ed4070 (libc.so.6:malloc) redirected to 0x4c2fd8d (malloc)
+--15416-- REDIR: 0x4edb590 (libc.so.6:__GI_strstr) redirected to 0x4c38350 (__strstr_sse2)
+--15416-- REDIR: 0x4ed4950 (libc.so.6:free) redirected to 0x4c30f3a (free)
+--15416-- REDIR: 0x4ed7030 (libc.so.6:calloc) redirected to 0x4c31fc4 (calloc)
+--15416-- REDIR: 0x4fc7300 (libc.so.6:__strspn_sse42) redirected to 0x4c38580 (strspn)
+--15416-- REDIR: 0x4fc7070 (libc.so.6:__strcspn_sse42) redirected to 0x4c384c0 (strcspn)
+--15416-- REDIR: 0x4fb8950 (libc.so.6:__strcpy_ssse3) redirected to 0x4c332a0 (strcpy)
+--15416-- REDIR: 0x4fa6d60 (libc.so.6:__strcmp_ssse3) redirected to 0x4c34270 (strcmp)
+--15416-- REDIR: 0x4fcbf50 (libc.so.6:__memset_avx2_unaligned_erms) redirected to 0x4c36fb0 (memset)
+--15416-- REDIR: 0x4fcb1d0 (libc.so.6:__strchrnul_avx2) redirected to 0x4c37c10 (strchrnul)
+--15416-- REDIR: 0x4fcbab0 (libc.so.6:__mempcpy_avx_unaligned_erms) redirected to 0x4c37d20 (mempcpy)
+==15416== Invalid free() / delete / delete[] / realloc()
+==15416==    at 0x4C30FA8: free (vg_replace_malloc.c:540)
+==15416==    by 0x108D62: main (banker_jfcd.c:69)
+==15416==  Address 0x5238760 is 0 bytes inside a block of size 2 free'd
+==15416==    at 0x4C30FA8: free (vg_replace_malloc.c:540)
+==15416==    by 0x108E56: main (banker_jfcd.c:88)
+==15416==  Block was alloc'd at
+==15416==    at 0x4C2FDFB: malloc (vg_replace_malloc.c:309)
+==15416==    by 0x109DFF: read_commands (banker_jfcd.c:280)
+==15416==    by 0x108D1B: main (banker_jfcd.c:63)
+==15416== 
+==15416== 
+==15416== HEAP SUMMARY:
+==15416==     in use at exit: 0 bytes in 0 blocks
+==15416==   total heap usage: 100 allocs, 103 frees, 66,096 bytes allocated
+==15416== 
+==15416== All heap blocks were freed -- no leaks are possible
+==15416== 
+==15416== ERROR SUMMARY: 3 errors from 1 contexts (suppressed: 0 from 0)
+==15416== 
+==15416== 3 errors in context 1 of 1:
+==15416== Invalid free() / delete / delete[] / realloc()
+==15416==    at 0x4C30FA8: free (vg_replace_malloc.c:540)
+==15416==    by 0x108D62: main (banker_jfcd.c:69)
+==15416==  Address 0x5238760 is 0 bytes inside a block of size 2 free'd
+==15416==    at 0x4C30FA8: free (vg_replace_malloc.c:540)
+==15416==    by 0x108E56: main (banker_jfcd.c:88)
+==15416==  Block was alloc'd at
+==15416==    at 0x4C2FDFB: malloc (vg_replace_malloc.c:309)
+==15416==    by 0x109DFF: read_commands (banker_jfcd.c:280)
+==15416==    by 0x108D1B: main (banker_jfcd.c:63)
+==15416== 
+==15416== ERROR SUMMARY: 3 errors from 1 contexts (suppressed: 0 from 0)
