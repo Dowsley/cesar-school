@@ -5,26 +5,19 @@
 /* Banker's Functions */
 int request_resources(int customer_num, int request[]);
 void release_resources(int customer_num, int release[]);
-int check_safety(int av[], int *alloc[], int *nd[]);
-void output_resources(void);
-void output_succ_rq(int customer_num, int request[]);
-void output_succ_rl(int customer_num, int release[]);
-void output_err_unsafe(int customer_num, int request[]);
-void output_err_max(int customer_num, int request[]);
-void output_err_av(int customer_num, int request[]);
+void output_result(int customer_num, int resources[], int code);
+void output_state(void);
 
 /* Auxiliary Functions */
 int count_lines(char *filename);
 void read_customers(int n, int m);
 void read_resources(const char *argv[], int m);
 void read_commands(char **cmd, FILE *fp);
-int **alloc_matrix(int n, int m);
+int **new_matrix(int n, int m);
 void copy_array(int *dst, int *src, int len);
-int is_array_leq(int arr1[], int arr2[], int n);
+int is_array_leq(int *arr1, int *arr2, int n);
 
 /* Globals */
-FILE *fp_rslt; /* Output log >> results.txt */
-
 int number_of_customers;
 int number_of_resources;
 
@@ -35,48 +28,53 @@ int **need;       /* the remaining need of each customer */
 
 int main(int argc, const char *argv[])
 {
-        /* Initializing global structures */
         number_of_customers = count_lines("customer.txt");
         number_of_resources = argc - 1;
 
-        available = malloc(number_of_resources * sizeof(int));
-        maximum = alloc_matrix(number_of_customers, number_of_resources);
-        allocation = alloc_matrix(number_of_customers, number_of_resources);
-        need = alloc_matrix(number_of_customers, number_of_resources);        
+        int n = number_of_customers;
+        int m = number_of_resources;
 
-        /* Populating data structures */  
-        read_customers(number_of_customers, number_of_resources); /* Maximum */
-        read_resources(argv, number_of_resources); /* Available */
-        for (int i = 0; i < number_of_customers; i++) { /* Need */
-                for (int j = 0; j < number_of_resources; j++) {
-                        /* need = maximum, because allocation starts as 0 */
-                        need[i][j] = maximum[i][j];
-                }
-        }
+        /* Allocating space for data structures */
+        available = malloc(m * sizeof(int));
+        maximum = new_matrix(n, m);
+        allocation = new_matrix(n, m);
+        need = new_matrix(n, m);       
+
+        /* Reading and feeding the data */  
+        read_customers(n, m);    /* customer.txt -> Maximum matrix */
+        read_resources(argv, m); /* command line -> Available array */
+        for (int i = 0; i < n; i++)
+                copy_array(need[i], maximum[i], m); /* need starts as maximum */
 
         /* Will hold a command, with each index being an argument.
-        Format: OPERATION | TaskNum | resources (m times) | NULL. */
-        char **cmd = calloc(3 + number_of_resources, sizeof(char *));
-        
-        /* Requests and releases */
-        int resources[number_of_resources];
-        int customer_num; 
+        Format: ACTION | Customer_num | resources (times m) | NULL. */
+        char **cmd = calloc(3 + m, sizeof(char *));
+
+        /* Clear teacher file =) */
+        FILE *tmp_fp = fopen("result.txt", "w");
+        fclose(tmp_fp);
 
         /* Banker's Execution */
-        fp_rslt = fopen("result.txt", "w");
+        int resources[m];
+        int customer_num; 
         FILE *fp_cmd = fopen("commands.txt", "r");
         while (!feof(fp_cmd)) {
-                /* Fetch next command and take action */
+                /* Fetch next command */
                 read_commands(cmd, fp_cmd);
+
+                /* If "*" -> Output state into file */
                 if (!strcmp(cmd[0], "*")) {
-                        output_resources();
+                        output_state();
                         continue;
                 }
-                /* Parse request/release command */
+
+                /* Else: Parse command resources */
                 customer_num = atoi(cmd[1]);
                 for (int i = 0; i < number_of_resources; i++) {
                         resources[i] = atoi(cmd[i+2]);
                 }
+
+                /* Request or release validation */
                 if (!strcmp(cmd[0], "RQ")) {
                         request_resources(customer_num, resources);
                 }
@@ -85,9 +83,8 @@ int main(int argc, const char *argv[])
                 }   
         }
 
+        /* Bankers finished: Clear memory */
         fclose(fp_cmd);
-        fclose(fp_rslt);
-
         free(available);  /* The available amount of each resource */
         free(maximum);    /* the maximum demand of each customer */
         free(allocation); /* the amount currently allocated to each customer */
@@ -96,7 +93,7 @@ int main(int argc, const char *argv[])
 }
 
 /* Returns 0 if successful and –1 if unsuccessful */
-int request_resources(int customer_num, int request[]) //TODO
+int request_resources(int customer_num, int request[])
 {
 
         int n = number_of_customers;
@@ -104,283 +101,125 @@ int request_resources(int customer_num, int request[]) //TODO
         
         /* Step 1: Maximum error check */
         if (!is_array_leq(request, need[customer_num], m)) {
-                output_err_max(customer_num, request);
+                output_result(customer_num, request, -2);
                 return -1;
         }
 
         /* Step 2: Available error check */
         if (!is_array_leq(request, available, m)) {
-                output_err_av(customer_num, request);
+                output_result(customer_num, request, -3);
                 return -1;
         }
 
-        /* 
-        * Step 3: Simulate future state and check safety 
-        * through temporary mirrors of the current state 
-        */
+        /* Step 3: Pretend request was granted to customer 
+        to later check if it leaves the state unsafe or not */
         int tmp_av[m];
         int tmp_alloc[n][m];
         int tmp_need[n][m];
 
-        /* curr state -> tmp state */
+        /* Copy current state to temporary state */
         copy_array(tmp_av, available, m);
         for (int i = 0; i < n; i++) {
                 copy_array(tmp_alloc[i], allocation[i], m);
                 copy_array(tmp_need[i], need[i], m);
         }
 
-        /* Simulate tmp state */
+        /* Simulate as if request was granted 
+        Updating TEMPORARY AVAILABLE and ALLOCATION */
         for (int i = 0; i < m; i++) {
-                tmp_av[i] -= request[i];
-                tmp_alloc[customer_num][i] += request[i];
-                //tmp_need[customer_num][i] -= request[i];
+                tmp_av[i] -= request[i]; /* available -= request */
+                tmp_alloc[customer_num][i] += request[i]; /* allocation += request */
         }
+
+        /* Update temporary NEED */
         for (int i = 0; i < n; i++) {
                 for (int j = 0; j < m; j++) {
-                        tmp_need[i][j] = maximum[i][j] - tmp_alloc[i][j]; 
+                        tmp_need[i][j] = maximum[i][j] - tmp_alloc[i][j];
                 }
-                
         }
-        
-        
 
-        /* 
-        * STEP 3: IS SAFE?
-        */
-
-        // Mark all processes as infinish 
-	int finish[n];
+        /** STEP 4: Check if state is safe or not **/
+        int finish[n]; /* Initialize all processes as unfinished */
         memset(finish, 0, n * sizeof(int)); 
+        
+        int work[m]; /* Copy available resources */
+        copy_array(work, tmp_av, m); 
 
-	// Make a copy of available resources 
-	int work[m]; 
-	for (int i = 0; i < m; i++) 
-		work[i] = tmp_av[i]; 
-
-	// While all processes are not finished 
-	// or system is not in safe state. 
-	int count = 0; 
-	while (count < n) 
-	{ 
-		// Find a process which is not finish and 
-		// whose needs can be satisfied with current 
-		// work[] resources. 
-		int found = 0; 
-		for (int p = 0; p < n; p++) 
-		{ 
-			// First check if a process is finished, 
-			// if no, go for next condition 
-			if (finish[p] == 0) 
-			{ 
-				// Check if for all resources of 
-				// current P need is less 
-				// than work 
-				int j; 
-				for (j = 0; j < m; j++) 
-					if (tmp_need[p][j] > work[j]) 
-						break; 
-
-				// If all needs of p were satisfied. 
-				if (j == m) 
-				{ 
-					// Add the allocated resources of 
-					// current P to the available/work 
-					// resources i.e.free the resources 
-					for (int k = 0 ; k < m ; k++) 
-						work[k] += tmp_alloc[p][k]; 
-
-					// Add this process to safe sequence. 
-					count++; 
-
-					// Mark this p as finished 
-					finish[p] = 1; 
-
-					found = 1; 
-				} 
-			} 
-		} 
-
-		// If we could not find a next process in safe 
-		// sequence. 
-		if (found == 0) { 
-                        output_err_unsafe(customer_num, request);
+        /* Runs while not all proccess have finished
+        or some cant be finished */
+        int count = 0; 
+        while (count < n) { 
+                int found = 0;
+                for (int i = 0; i < n; i++) { 
+                        /* Find a customer which finish[i] == false
+                        * and need[i] <= work (can be satisfied) */
+                        if (!finish[i]) { 
+                                int j; 
+                                for (j = 0; j < m; j++) 
+                                        if (!(tmp_need[i][j] <= work[j])) 
+                                                break;
+                                /* If customer found */
+                                if (j == m) {
+                                        /* Update work and finished */
+                                        finish[i] = 1; 
+                                        for (int k = 0 ; k < m ; k++) 
+                                                work[k] += tmp_alloc[i][k]; 
+                                        found = 1;
+                                        count++; 
+                                } 
+                        } 
+                } 
+		/* If any i couldnt be found the state is unsafe */
+		if (!found) { 
+                        output_result(customer_num, request, -1);
                         return -1;
 		} 
 	}
-
-        /*if (!check_safety((int *)tmp_av, (int **) tmp_alloc, (int**) tmp_need)) {
-                output_err_unsafe(customer_num, request);
-                return -1;
-        }*/
         
-        /* Is safe: Update the current state */
+        /* IS SAFE: Update the current state and output success */
         copy_array(available, tmp_av, m);
         for (int i = 0; i < n; i++) {
-                for (int j = 0; j < m; j++) {
-                        allocation[i][j] = tmp_alloc[i][j];
-                        need[i][j] = tmp_need[i][j];
-                }
+                copy_array(allocation[i], tmp_alloc[i], m);
+                copy_array(need[i], tmp_need[i], m);
         }
-
-        output_succ_rq(customer_num, request);
+        output_result(customer_num, request, 0);
         return 0; 
 }
 
-/* Returns 1 if safe, 0 if unsafe */
-int check_safety(int *av, int **alloc, int **nd)
-{
-        int n = number_of_customers;
-        int m = number_of_resources;
 
-        int finish[n];
-        int work[m];
-        memset(finish, 0, n * sizeof(int));
-        copy_array(work, av, m);
-
-        int flag;
-        int found;
-        while (1) {
-                found = 0;
-                for (int i = 0; i < n; i++) {
-                        flag = 1;
-                        if (!(!finish[i] && is_array_leq(need[i], work, m))) {
-                                flag = 0;
-                                break;
-                        }
-
-                        if (flag) {
-                                /* Array sum */
-                                for (int j = 0; j < m; j++) {
-                                        work[j] += alloc[i][j];
-                                }
-                                finish[i] = 1;
-                                found = 1;
-                        }
-                }
-                if (!found) {
-                        for (int i = 0; i < n; i++){
-                                if (!finish[i]) {
-                                        return 0;
-                                }
-                        }
-                        return 1;
-                }                
-        }        
-}
-
-int check_safety2(int av[], int *alloc[], int *nd[])
-{
-        int n = number_of_customers;
-        int m = number_of_resources;
-
-        // Mark all processes as infinish 
-	int finish[n];
-        memset(finish, 0, n * sizeof(int)); 
-
-	// Make a copy of available resources 
-	int work[m]; 
-	for (int i = 0; i < m; i++) 
-		work[i] = av[i]; 
-
-	// While all processes are not finished 
-	// or system is not in safe state. 
-	int count = 0; 
-	while (count < n) 
-	{ 
-		// Find a process which is not finish and 
-		// whose needs can be satisfied with current 
-		// work[] resources. 
-		int found = 0; 
-		for (int p = 0; p < n; p++) 
-		{ 
-			// First check if a process is finished, 
-			// if no, go for next condition 
-			if (finish[p] == 0) 
-			{ 
-				// Check if for all resources of 
-				// current P need is less 
-				// than work 
-				int j; 
-				for (j = 0; j < m; j++) 
-					if (nd[p][j] > work[j]) 
-						break; 
-
-				// If all needs of p were satisfied. 
-				if (j == m) 
-				{ 
-					// Add the allocated resources of 
-					// current P to the available/work 
-					// resources i.e.free the resources 
-					for (int k = 0 ; k < m ; k++) 
-						work[k] += alloc[p][k]; 
-
-					// Add this process to safe sequence. 
-					count++; 
-
-					// Mark this p as finished 
-					finish[p] = 1; 
-
-					found = 1; 
-				} 
-			} 
-		} 
-
-		// If we could not find a next process in safe 
-		// sequence. 
-		if (found == 0) { 
-			return 0; 
-		} 
-	}
-        return 1;
-}
-
-void release_resources(int customer_num, int release[]) //TODO
+void release_resources(int customer_num, int release[])
 {
         int m = number_of_resources;
-
         int qt;
         for (int i = 0; i < m; i++) {
                 qt = release[i];
+                /* Prevent releasing more than possible */
                 if (qt > allocation[customer_num][i])
                         qt = allocation[customer_num][i];
+                /* Release */
                 allocation[customer_num][i] -= qt;
                 available[i] += qt;
         }
-
-        /* Output success */
-        "Release from customer %d the resources %d %d %d";
-        fprintf(
-                fp_rslt, 
-                "Release from customer %d the resources ", 
-                customer_num
-                );
-        for (int i = 0; i < number_of_resources; i++) {
-                fprintf(fp_rslt, "%d ", release[i]);
-        }
-        fputs("\n", fp_rslt);
+        output_result(customer_num, release, 1);
 }
 
+/* Counts lines by the quantity of "\n" */
 int count_lines(char *filename)
 {
-        int lines = 0;
-        
         FILE *fp = fopen(filename, "r");
-        if (!fp) {
-                printf("\nCould not open file %s", filename);
-                return lines;
-        }
-        
+
+        int lines = 0;
         char ch;
         while (!feof(fp)) {
                 ch = fgetc(fp);
-                if (ch == '\n') {
+                if (ch == '\n')
                         lines++;
-                }
         }
         fclose(fp);
-        return lines+1;
+        return (lines+1);
 }
 
+/* customer.txt -> Maximum matrix */
 void read_customers(int n, int m)
 {
         FILE *fp = fopen("customer.txt", "r");
@@ -394,12 +233,11 @@ void read_customers(int n, int m)
         fclose(fp);
 }
 
-/* */
+/* command line -> Available array */
 void read_resources(const char *argv[], int m)
 {
-        for (int i = 0; i < m; i++) {
+        for (int i = 0; i < m; i++)
                 available[i] = atoi(argv[i+1]);
-        }
 }
 
 /* Reads one line at a time and parses the input into the CMD array */
@@ -416,7 +254,6 @@ void read_commands(char **cmd, FILE *fp)
                         break;
                 }
         }
-        
         /* Parses input */
         int size;
         int pos = 0;
@@ -426,9 +263,8 @@ void read_commands(char **cmd, FILE *fp)
 		size = 0;
 		for (int i = 0; ; i++) {
 			size++;
-			if (pc[i] == '\0') {
+			if (pc[i] == '\0')
 				break;
-			}
 		}
 		cmd[pos] = malloc(size * sizeof(char));
 		strcpy(cmd[pos], pc);
@@ -438,111 +274,133 @@ void read_commands(char **cmd, FILE *fp)
 	cmd[pos] = NULL;
 }
 
-int **alloc_matrix(int n, int m)
+/* Allocates a matrix in heap. Values inialized as 0 */
+int **new_matrix(int n, int m)
 {
-	int** matriz = malloc(n * sizeof(int*));
-
+	int** mat = malloc(n * sizeof(int*));
 	for (int i = 0; i < n; i++)
-		matriz[i] = calloc(m, sizeof(int));
-
-	return matriz;
+		mat[i] = calloc(m, sizeof(int));
+	return mat;
 }
 
+/* Copies every element from src into dst */
 void copy_array(int *dst, int *src, int len)
 {
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++)
                 dst[i] = src[i];
-        }
 }
 
-void output_resources(void)
+/* Output the state of the resources into the result file */
+void output_state(void)
+{
+        FILE *fp_out = fopen("result.txt", "a");
+        int n = number_of_customers;
+        int m = number_of_resources;
+
+        fputs("MAXIMUM | ALLOCATION | NEED\n", fp_out);
+        for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
+                        if (j == m-1)
+                                fprintf(fp_out, "%-3d | ",maximum[i][j]);
+                        else 
+                                fprintf(fp_out, "%d ", maximum[i][j]);
+                }
+                for (int j = 0; j < m; j++) {
+                        if (j == m-1)
+                                fprintf(fp_out, "%-6d | ",allocation[i][j]);
+                        else 
+                                fprintf(fp_out, "%d ", allocation[i][j]);
+                }
+                for (int j = 0; j < m; j++)
+                        fprintf(fp_out, "%d ", need[i][j]);
+                fputs("\n", fp_out);
+        }
+
+        fputs("AVAILABLE ", fp_out);
+        for (int i = 0; i < m; i++) {
+                fprintf(fp_out, "%d ", available[i]);
+        }
+        fputs("\n", fp_out);
+
+        fclose(fp_out);
+}
+
+/* Writes out operation result based on the given success code
+*  -3 = ERR: Not enough resources in AVAILABLE
+*  -2 = ERR: Asking more stated in MAXIMUM
+*  -1 = ERR: State is unsafe
+*   0 = SUCC: Request
+*   1 = SUCC: Release */
+void output_result(int cust_num, int resources[], int code)
 {
         int n = number_of_customers;
         int m = number_of_resources;
 
-        fputs("MAXIMUM\t| ALLOCATION\t| NEED\n", fp_rslt);
-        for (int i = 0; i < n; i++) {
-                for (int j = 0; j < m; j++) {
-                        if (j == m-1)
-                                fprintf(fp_rslt, "%-7d | ",maximum[i][j]);
-                        else 
-                                fprintf(fp_rslt, "%d ", maximum[i][j]);
+        FILE *fp_out = fopen("result.txt", "a");
+
+        /* ERROR: Not enough resources */
+        if (code == -3) {
+                fputs("The resources ", fp_out);
+                for (int i = 0; i < m; i++) {
+                        fprintf(fp_out, "%d ", available[i]);
                 }
-                for (int j = 0; j < m; j++) {
-                        if (j == m-1)
-                                fprintf(fp_rslt, "%-10d | ",allocation[i][j]);
-                        else 
-                                fprintf(fp_rslt, "%d ", allocation[i][j]);
+                fprintf(fp_out, 
+                        "are not enough to customer %d request ", 
+                        cust_num);
+                for (int i = 0; i < m; i++) {
+                        fprintf(fp_out, "%d ", resources[i]);
+                } 
+                fputs("\n", fp_out);   
+        }
+        /* ERROR: Asking more than promised */
+        else if (code == -2) {
+                fprintf(fp_out, "The customer %d request ", cust_num);
+                for (int i = 0; i < number_of_resources; i++) {
+                        fprintf(fp_out, "%d ", resources[i]);
                 }
-                for (int j = 0; j < m; j++) {
-                        if (j == m-1)
-                                fprintf(fp_rslt, "%-4d | ", need[i][j]);
-                        else 
-                                fprintf(fp_rslt, "%d ", need[i][j]);
+                fputs("was denied because exceed its maximum allocation\n",
+                        fp_out); 
+        }
+        /* ERROR: System state is unsafe */
+        else if (code == -1) {
+                fprintf(fp_out, 
+                        "The customer %d request ", 
+                        cust_num);
+                for (int i = 0; i < m; i++) {
+                        fprintf(fp_out, "%d ", resources[i]);
                 }
-                fputs("\n", fp_rslt);
+                fputs("was denied because result in an unsafe state\n",
+                        fp_out);  
         }
-        
-        fputs("AVAILABLE ", fp_rslt);
-        for (int i = 0; i < m; i++) {
-                fprintf(fp_rslt, "%d ", available[i]);
+        /* SUCCESS: Request resources */
+        else if (code == 0) {
+                fprintf(fp_out, 
+                        "Allocate to customer %d the resources ", 
+                        cust_num);
+                for (int i = 0; i < m; i++) {
+                        fprintf(fp_out, "%d ", resources[i]);
+                }
+                fputs("\n", fp_out);
         }
-        fputs("\n", fp_rslt);
+        /* SUCCESS: Release resources */
+        else if (code == 1) {
+                "Release from customer %d the resources %d %d %d";
+                fprintf(fp_out, 
+                        "Release from customer %d the resources ", 
+                        cust_num);
+                for (int i = 0; i < m; i++) {
+                        fprintf(fp_out, "%d ", resources[i]);
+                }
+                fputs("\n", fp_out);
+        }
+        fclose(fp_out);
 }
 
-void output_succ_rq(int customer_num, int request[])
+/* Returns 1 if arr1 is less or equal than array 2 */
+int is_array_leq(int *arr1, int *arr2, int n)
 {
-        fprintf(
-                fp_rslt, 
-                "Allocate to customer %d the resources ", 
-                customer_num
-                );
-        for (int i = 0; i < number_of_resources; i++) {
-              fprintf(fp_rslt, "%d ", request[i]);
-        }
-        fputs("\n", fp_rslt);
-}
-
-void output_err_unsafe(int customer_num, int request[])
-{
-        fprintf(fp_rslt, "The customer %d request ", customer_num);
-        for (int i = 0; i < number_of_resources; i++) {
-                fprintf(fp_rslt, "%d ", request[i]);
-        }
-        fputs("was denied because result in an unsafe state\n", fp_rslt);
-}
-
-void output_err_max(int customer_num, int request[])
-{
-        fprintf(fp_rslt, "The customer %d request ", customer_num);
-        for (int i = 0; i < number_of_resources; i++) {
-                fprintf(fp_rslt, "%d ", request[i]);
-        }
-        fputs("was denied because exceed its maximum allocation\n", fp_rslt);
-}
-
-void output_err_av(int customer_num, int request[])
-{
-        fputs("The resources ", fp_rslt);
-        for (int i = 0; i < number_of_resources; i++) {
-                fprintf(fp_rslt, "%d ", available[i]);
-        }
-        fprintf(fp_rslt, "are not enough to customer %d request ", customer_num);
-        for (int i = 0; i < number_of_resources; i++) {
-                fprintf(fp_rslt, "%d ", request[i]);
-        } 
-        fputs("\n", fp_rslt);
-}
-
-
-/* Checks if every arr1[i] are LESS or EQUAL than their arr2[i] counterpart */
-int is_array_leq(int arr1[], int arr2[], int n)
-{
-        for (int i = 0; i < n; i++) {
-                if (!(arr1[i] <= arr2[i])) {
+        for (int i = 0; i < n; i++)
+                if (!(arr1[i] <= arr2[i]))
                         return 0;
-                }
-        }
-
         return 1;
 }
