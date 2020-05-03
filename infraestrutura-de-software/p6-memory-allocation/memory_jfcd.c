@@ -18,7 +18,7 @@ struct node {
 /* Main memory management functions */
 int request(struct node *head, int pid, int size, char strat);
 int release(struct node *head, int pid);
-int compact();
+struct node *compact(struct node *head, int max);
 int report(struct node *head);
 
 /* Memory strategies functions */
@@ -27,9 +27,11 @@ struct node *find_best_fit(struct node *head, int size);
 struct node *find_worst_fit(struct node *head, int size);
 
 /* Double linked list functions */
-void *insert_node(struct node *head, struct node *new_node, int pid);
+void insert_node(struct node *head, struct node *new_node, int pid);
+void clear_list(struct node *head);
+struct node *append_node(struct node *head, struct node *new_node);
 struct node *create_node(int pid, int start, int end, 
-			 struct node *next, struct node *prev);
+			struct node *next, struct node *prev);
 
 /* Utility functions */
 int get_command(char *cmd[MAX_LINE]);
@@ -40,7 +42,7 @@ int main(int argc, char const *argv[])
 	char *cmd[MAX_LINE];     /* Command args. Ends with NULL. */
 
 	/* Initialize double linked list head */
-	struct node *head = create_node(-1, 0, max-1, NULL, NULL);
+	struct node *head = create_node(-1, 0, max - 1, NULL, NULL);
 
 	/* Start program */
 	int argsize;
@@ -53,7 +55,7 @@ int main(int argc, char const *argv[])
 		/* Memory operations */
 		if (!strcmp(cmd[0], "C")) {
 			/* Compact unused holes into one */
-			//compact();
+			head = compact(head, max);
 		} else if (!strcmp(cmd[0], "RQ")) {
 			/* Request block for 1 proccess */
 			cmd[1][0] = '0'; /* Remove the "P" from the pid */
@@ -88,10 +90,10 @@ int request(struct node *head, int pid, int size, char strat)
 		found = find_first_fit(head, size);
 	} else if (strat == 'B') {
 		/* Find best-fit block */
-		//found = find_best_fit(head, size);
+		found = find_best_fit(head, size);
 	} else if (strat == 'W') {
 		/* Find worst-fit block */
-		//found = find_worst_fit(head, size);
+		found = find_worst_fit(head, size);
 	}
 
 	/* Section not found */
@@ -134,14 +136,44 @@ struct node *find_first_fit(struct node *head, int size)
 
 struct node *find_best_fit(struct node *head, int size)
 {
-	//TODO
-	return NULL;
+	/* Traverse list */
+	int section;
+	struct node *best = NULL;
+	struct node *curr = head;
+	while(curr != NULL) {
+		/* If empty section satisfies size */
+		section = (curr->end - curr->start + 1);
+		if (curr->pid == -1 && size <= section) {
+			if (best == NULL) {
+				best = curr;
+			} else if (section < (best->end - best->start + 1)) {
+				best = curr;
+			}
+		}
+		curr = curr->next;
+	}
+	return best;
 }
 
 struct node *find_worst_fit(struct node *head, int size)
 {
-	//TODO
-	return NULL;
+	/* Traverse list */
+	int section;
+	struct node *worst = NULL;
+	struct node *curr = head;
+	while(curr != NULL) {
+		/* If empty section satisfies size */
+		section = (curr->end - curr->start + 1);
+		if (curr->pid == -1 && size <= section) {
+			if (worst == NULL) {
+				worst = curr;
+			} else if (section > (worst->end - worst->start + 1)) {
+				worst = curr;
+			}
+		}
+		curr = curr->next;
+	}
+	return worst;
 }
 
 int release(struct node *head, int pid)
@@ -201,38 +233,6 @@ int release(struct node *head, int pid)
 	return 1;
 }
 
-struct node *create_node(int pid, int start, int end, 
-			 struct node *next, struct node *prev)
-{
-	struct node *new_node = (struct node *)malloc(sizeof(struct node));
-
-	/* Copy values */
-	new_node->pid = pid;
-	new_node->start = start;
-	new_node->end = end;
-	new_node->next = next;
-	new_node->next = prev;
-
-	return new_node;
-}
-
-/* Inserts a new node after a specified node */
-void *insert_node(struct node *head, struct node *new_node, int pid)
-{
-	/* Traverse */
-	struct node *curr = head;
-	while(curr->next != NULL) {
-		if (curr->pid == pid)
-			break; /* Found the specified node */
-		curr = curr->next;
-	}
-	
-	/* Position the new node after it */
-	new_node->prev = curr;
-	new_node->next = curr->next;
-	curr->next = new_node;
-}
-
 int report(struct node *head)
 {
 	/* Empty list: return error */
@@ -255,6 +255,113 @@ int report(struct node *head)
 		curr = curr->next;
 	}
 	return 1;
+}
+
+struct node *compact(struct node *head, int max)
+{
+	/* Create new list */
+	struct node *new_head = NULL;
+
+	/* Traverse main list and transfer contents
+	*  Allocated blocks go to the top */
+	int range;
+	struct node *new;
+	struct node *last = NULL;
+	struct node *curr = head;
+	while (curr->next != NULL) {
+		if (curr->pid != -1) {
+			if (last == NULL) {
+				/* First node */
+				new = create_node(curr->pid, curr->start,
+						curr->end, NULL, NULL);
+			} else {
+				range = curr->end - curr->start;
+				new = create_node(curr->pid, last->end + 1,
+						last->end + 1 + range, 
+						NULL, NULL);
+			}
+			new_head = append_node(new_head, new);
+			last = new;
+		}
+		curr = curr->next;
+	}
+
+	/* Add the EMPTY SPACE HOLE node at the end */
+	new = create_node(-1, last->end + 1, max - 1, NULL, NULL);
+	new_head = append_node(new_head, new);
+	
+	/* Clear previous list */
+	curr = head;
+	while (curr != NULL) {
+		last = curr;
+		curr = curr->next;
+		free(last);
+	}
+
+	return new_head;
+}
+
+void clear_list(struct node *head)
+{
+	struct node *tmp;
+	struct node *curr = head;
+	while (curr->next != NULL) {
+		tmp = curr;
+		curr = curr->next;
+		free(tmp);
+	}
+}
+
+struct node *create_node(int pid, int start, int end, 
+			 struct node *next, struct node *prev)
+{
+	struct node *new_node = (struct node *)malloc(sizeof(struct node));
+
+	/* Copy values */
+	new_node->pid = pid;
+	new_node->start = start;
+	new_node->end = end;
+	new_node->next = next;
+	new_node->next = prev;
+
+	return new_node;
+}
+
+/* Inserts a node at the end of the list */
+struct node *append_node(struct node *head, struct node *new_node)
+{
+	if (head == NULL) {
+		head = new_node;
+		new_node->next = NULL;
+		new_node->prev = NULL;
+	} else {
+		struct node *curr = head;
+		while (curr->next != NULL) {
+			curr = curr->next;
+		}
+		curr->next = new_node;
+		new_node->next = NULL;
+		new_node->prev = curr;
+	}
+
+	return head;
+}
+
+/* Inserts a new node after a specified node */
+void insert_node(struct node *head, struct node *new_node, int pid)
+{
+	/* Traverse */
+	struct node *curr = head;
+	while(curr->next != NULL) {
+		if (curr->pid == pid)
+			break; /* Found the specified node */
+		curr = curr->next;
+	}
+	
+	/* Position the new node after it */
+	new_node->prev = curr;
+	new_node->next = curr->next;
+	curr->next = new_node;
 }
 
 /* Gets keyboard input, parses args into array, and returns its size. */
