@@ -21,20 +21,18 @@ int release(struct node *head, int pid);
 struct node *compact(struct node *head, int max);
 int report(struct node *head);
 
-/* Memory strategies functions */
+/* Memory-allocation strategy functions */
 struct node *find_first_fit(struct node *head, int size);
 struct node *find_best_fit(struct node *head, int size);
 struct node *find_worst_fit(struct node *head, int size);
 
-/* Double linked list functions */
+/* Utility functions */
+int get_command(char *cmd[MAX_LINE]);
 void insert_node(struct node *head, struct node *new_node, int pid);
 void clear_list(struct node *head);
 struct node *append_node(struct node *head, struct node *new_node);
 struct node *create_node(int pid, int start, int end, 
 			struct node *next, struct node *prev);
-
-/* Utility functions */
-int get_command(char *cmd[MAX_LINE]);
 
 int main(int argc, char const *argv[])
 {
@@ -78,9 +76,11 @@ int main(int argc, char const *argv[])
 			free(cmd[i]);
 	}
 
+	clear_list(head);
 	return 0;
 }
 
+/* Requests a memory block based on a certain strategy */
 int request(struct node *head, int pid, int size, char strat)
 {
 	/* Perform strategy to find section */
@@ -118,6 +118,7 @@ int request(struct node *head, int pid, int size, char strat)
 	return 1;
 }
 
+/* Returns the first-found viable memory section */
 struct node *find_first_fit(struct node *head, int size)
 {
 	/* Traverse list */
@@ -134,6 +135,7 @@ struct node *find_first_fit(struct node *head, int size)
 	return curr;
 }
 
+/* Returns the smallest viable memory section */
 struct node *find_best_fit(struct node *head, int size)
 {
 	/* Traverse list */
@@ -155,6 +157,7 @@ struct node *find_best_fit(struct node *head, int size)
 	return best;
 }
 
+/* Returns the largest viable memory section */
 struct node *find_worst_fit(struct node *head, int size)
 {
 	/* Traverse list */
@@ -162,8 +165,8 @@ struct node *find_worst_fit(struct node *head, int size)
 	struct node *worst = NULL;
 	struct node *curr = head;
 	while(curr != NULL) {
-		/* If empty section satisfies size */
 		section = (curr->end - curr->start + 1);
+		/* If empty section satisfies size */
 		if (curr->pid == -1 && size <= section) {
 			if (worst == NULL) {
 				worst = curr;
@@ -233,6 +236,7 @@ int release(struct node *head, int pid)
 	return 1;
 }
 
+/* Prints out a report of the current memory status */
 int report(struct node *head)
 {
 	/* Empty list: return error */
@@ -257,6 +261,8 @@ int report(struct node *head)
 	return 1;
 }
 
+/* Puts all proccess sections in one side
+*  And merge all the holes on the other */
 struct node *compact(struct node *head, int max)
 {
 	/* Create new list */
@@ -272,8 +278,9 @@ struct node *compact(struct node *head, int max)
 		if (curr->pid != -1) {
 			if (last == NULL) {
 				/* First node */
-				new = create_node(curr->pid, curr->start,
-						curr->end, NULL, NULL);
+				range = curr->end - curr->start;
+				new = create_node(curr->pid, 0,
+						range, NULL, NULL);
 			} else {
 				range = curr->end - curr->start;
 				new = create_node(curr->pid, last->end + 1,
@@ -291,16 +298,11 @@ struct node *compact(struct node *head, int max)
 	new_head = append_node(new_head, new);
 	
 	/* Clear previous list */
-	curr = head;
-	while (curr != NULL) {
-		last = curr;
-		curr = curr->next;
-		free(last);
-	}
-
+	clear_list(head);
 	return new_head;
 }
 
+/* Free all nodes from heap */
 void clear_list(struct node *head)
 {
 	struct node *tmp;
