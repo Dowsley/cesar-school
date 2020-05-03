@@ -28,7 +28,7 @@ struct node *find_worst_fit(struct node *head, int size);
 
 /* Utility functions */
 int get_command(char *cmd[MAX_LINE]);
-void insert_node(struct node *head, struct node *new_node, int pid);
+void insert_node(struct node *reference, struct node *new_node);
 void clear_list(struct node *head);
 struct node *append_node(struct node *head, struct node *new_node);
 struct node *create_node(int pid, int start, int end, 
@@ -43,6 +43,7 @@ int main(int argc, char const *argv[])
 	struct node *head = create_node(-1, 0, max - 1, NULL, NULL);
 
 	/* Start program */
+	int found;
 	int argsize;
 	int run = 1;
 	while(run) {
@@ -62,7 +63,12 @@ int main(int argc, char const *argv[])
 		} else if (!strcmp(cmd[0], "RL")) {
 			/* Release block for 1 proccess */
 			cmd[1][0] = '0'; /* Remove the "P" from the pid */
-			release(head, atoi(cmd[1]));
+			found = 0;
+			while (release(head, atoi(cmd[1]))) {
+				found = 1;
+			}
+			if (!found)
+				printf("Fail to release P%d\n", atoi(cmd[1]));
 		} else if (!strcmp(cmd[0], "STAT")) {
 			/* Report memory status */
 			report(head); 
@@ -83,6 +89,12 @@ int main(int argc, char const *argv[])
 /* Requests a memory block based on a certain strategy */
 int request(struct node *head, int pid, int size, char strat)
 {
+	/* Can't ask for 0 or negative memory */
+	if (size <= 0) {
+		printf("The request of P%d fail\n", pid);
+		return 0;
+	}
+
 	/* Perform strategy to find section */
 	struct node *found;
 	if (strat == 'F') {
@@ -113,7 +125,7 @@ int request(struct node *head, int pid, int size, char strat)
 		int hole_start = found->end + 1;
 		struct node *hole;
 		hole = create_node(-1, hole_start, hole_end, NULL, NULL);
-		insert_node(head, hole, found->pid);
+		insert_node(found, hole);
 	}
 	return 1;
 }
@@ -192,9 +204,8 @@ int release(struct node *head, int pid)
 		curr = curr->next;
 	}
 
-	/* Not found */
+	/* Not found on the first time: Does not exist */
 	if (!found) {
-		printf("Fail to release P%d", pid);
 		return 0;
 	}
 
@@ -231,8 +242,7 @@ int release(struct node *head, int pid)
 			tmp_prev->next = curr->next;
 			free(curr);
 		}
-	} 
-
+	}
 	return 1;
 }
 
@@ -306,10 +316,9 @@ struct node *compact(struct node *head, int max)
 void clear_list(struct node *head)
 {
 	struct node *tmp;
-	struct node *curr = head;
-	while (curr->next != NULL) {
-		tmp = curr;
-		curr = curr->next;
+	while (head != NULL) {
+		tmp = head;
+		head = head->next;
 		free(tmp);
 	}
 }
@@ -349,21 +358,16 @@ struct node *append_node(struct node *head, struct node *new_node)
 	return head;
 }
 
-/* Inserts a new node after a specified node */
-void insert_node(struct node *head, struct node *new_node, int pid)
-{
-	/* Traverse */
-	struct node *curr = head;
-	while(curr->next != NULL) {
-		if (curr->pid == pid)
-			break; /* Found the specified node */
-		curr = curr->next;
+/* Inserts a new node after a specified reference node */
+void insert_node(struct node *reference, struct node *new_node)
+{	
+	/* Position the new node after the reference */
+	new_node->prev = reference;
+	new_node->next = reference->next;
+	if (reference->next != NULL) {
+		reference->next->prev = new_node;
 	}
-	
-	/* Position the new node after it */
-	new_node->prev = curr;
-	new_node->next = curr->next;
-	curr->next = new_node;
+	reference->next = new_node;
 }
 
 /* Gets keyboard input, parses args into array, and returns its size. */
