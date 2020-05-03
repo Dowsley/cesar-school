@@ -303,7 +303,13 @@ struct node *compact(struct node *head, int max)
 		curr = curr->next;
 	}
 
-	/* Add the EMPTY SPACE HOLE node at the end */
+	/* NOTHING TO COMPACT: No changes needed. */
+	if (last == NULL) {
+		return head;
+	} 
+
+	/* Processes transferred successfully
+	*  Add the EMPTY SPACE HOLE node at the end */
 	new = create_node(-1, last->end + 1, max - 1, NULL, NULL);
 	new_head = append_node(new_head, new);
 	
@@ -376,7 +382,6 @@ int get_command(char *cmd[MAX_LINE])
 	/* Get command input into temporary buffer */
 	char buffer[MAX_LINE];
 
-	fflush(stdin); // TODO: Replace this, causes undefined behavior
 	fgets(buffer, MAX_LINE, stdin);
 	for (int i = 0; ; i++) {
 		if (buffer[i] == '\n') {
