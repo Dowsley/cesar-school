@@ -13,6 +13,9 @@ import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 
 import java.util.*;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
 
 public class ListaFrame extends JFrame {
 	private JPanel contentPane;
@@ -31,26 +34,47 @@ public class ListaFrame extends JFrame {
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		contentPane.setLayout(null);
 
 		// Componentes da ListaFrame
 		btnAdicionar = new JButton("Adicionar");
-		btnAdicionar.setBounds(290, 11, 89, 23);
-		contentPane.add(btnAdicionar);
 
-		btnSair = new JButton("Sair");
-		btnSair.setBounds(290, 227, 89, 23);
-		contentPane.add(btnSair);
+		btnSair = new JButton("Salvar e Sair");
 		
 		table = new JTable(dados, colunas);
 		table.setTableHeader(table.getTableHeader());
 		scrollPane = new JScrollPane(table);
-		scrollPane.setBounds(10, 11, 216, 239);
-		contentPane.add(scrollPane);	
 		
 		btnRemover = new JButton("Remover");
-		btnRemover.setBounds(290, 112, 89, 23);
-		contentPane.add(btnRemover);
+		GroupLayout gl_contentPane = new GroupLayout(contentPane);
+		gl_contentPane.setHorizontalGroup(
+			gl_contentPane.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_contentPane.createSequentialGroup()
+					.addGap(5)
+					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
+						.addComponent(btnAdicionar, GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
+						.addComponent(btnRemover, GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
+						.addComponent(btnSair, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+					.addGap(18))
+		);
+		gl_contentPane.setVerticalGroup(
+			gl_contentPane.createParallelGroup(Alignment.LEADING)
+				.addGroup(gl_contentPane.createSequentialGroup()
+					.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_contentPane.createSequentialGroup()
+							.addGap(23)
+							.addComponent(btnAdicionar)
+							.addGap(11)
+							.addComponent(btnRemover)
+							.addPreferredGap(ComponentPlacement.RELATED, 142, Short.MAX_VALUE)
+							.addComponent(btnSair))
+						.addGroup(gl_contentPane.createSequentialGroup()
+							.addGap(6)
+							.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 239, Short.MAX_VALUE)))
+					.addGap(6))
+		);
+		contentPane.setLayout(gl_contentPane);
 	}
 	
 	public JTable getTable() {
