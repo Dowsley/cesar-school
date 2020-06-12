@@ -1,8 +1,5 @@
 package school.cesar.poo.av2.agenda;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 public class View {
 	private ListaFrame gui;
 	private AddFrame popup;

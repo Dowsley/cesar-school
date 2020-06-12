@@ -1,21 +1,16 @@
 package school.cesar.poo.av2.agenda;
 
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.JTableHeader;
 import javax.swing.JButton;
 import javax.swing.JTable;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
-
-import java.util.*;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
+
+import java.util.*;
 
 public class ListaFrame extends JFrame {
 	private JPanel contentPane;

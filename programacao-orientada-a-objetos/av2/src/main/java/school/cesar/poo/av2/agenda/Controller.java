@@ -2,17 +2,9 @@ package school.cesar.poo.av2.agenda;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 
 import java.util.*;
 
@@ -41,9 +33,9 @@ public class Controller {
 		);
 		view.getGui().setVisible(true);
 
-		/* Eventos de interação entre Model e View */
+		/* Eventos de interaï¿½ï¿½o entre Model e View */
 		
-		// 1: Evento de botão de adicionar da GUI
+		// 1: Evento de botï¿½o de adicionar da GUI
 		view.getGui().getBtnAdicionar().addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// 1.1: Inicializa Popup
@@ -94,11 +86,11 @@ public class Controller {
 					DefaultTableModel tableModel;
 					tableModel = (DefaultTableModel) view.getGui().getTable().getModel();
 					// 2.2: Remove da tabela e do estado do modelo
-					/* Comentário: É varrido no inverso pois, se for em ordem
-					 * normal, os índices subsequentes decrementam a cada remoção */
+					/* Comentï¿½rio: ï¿½ varrido no inverso pois, se for em ordem
+					 * normal, os ï¿½ndices subsequentes decrementam a cada remoï¿½ï¿½o */
 					Contato c;
 					for (int i=lines.length-1; i >= 0; i--) {
-						// 2.2.1: Constrói o objeto a ser deletado no estado
+						// 2.2.1: Constrï¿½i o objeto a ser deletado no estado
 						c = new Contato(
 								tableModel.getValueAt(lines[i], 0).toString(),
 								tableModel.getValueAt(lines[i], 1).toString(),
@@ -118,12 +110,12 @@ public class Controller {
 				}
 		});
 		
-		// 3: Evento de botão de sair da GUI
+		// 3: Evento de botï¿½o de sair da GUI
 		view.getGui().getBtnSair().addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// 3.1: Salva estado do modelo em seu arquivo.
 				model.salvarEstado();
-				// 3.2: Fecha aplicação por total
+				// 3.2: Fecha aplicaï¿½ï¿½o por total
 				view.getGui().dispose();
 			}
 		});
