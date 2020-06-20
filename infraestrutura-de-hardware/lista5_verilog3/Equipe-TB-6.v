@@ -28,6 +28,7 @@ module decode_tb;
         Opcode = 35 (lw)
         rs = 1
         rt = 2
+        rd = 0
         shamt = 0
         funct = 0
         immediate = 3 
@@ -40,5 +41,5 @@ module decode_tb;
         target = 3 */ 
     end
 
-	decode op (Instruction,OpCode,Rs,Rt,Rd,shamt,funct,immediate,target);
+	decoder op (Instruction,OpCode,Rs,Rt,Rd,shamt,funct,immediate,target);
 endmodule 

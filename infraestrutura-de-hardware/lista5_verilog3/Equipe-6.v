@@ -11,37 +11,55 @@ module decoder(Instruction, OpCode, Rs, Rt, Rd,
 	output [15:0] immediate;
 	output [25:0] target;
 
+	reg [5:0] OpCodeOut;
+	reg [4:0] RsOut;
+	reg [4:0] RtOut;
+	reg [4:0] RdOut;
+	reg [4:0] shamtOut;
+	reg [5:0] functOut;
+	reg [15:0] immediateOut;
+	reg [25:0] targetOut;
+
+	assign OpCode = OpCodeOut;
+	assign Rs = RsOut;
+	assign Rt = RtOut;
+	assign Rd = RdOut;
+	assign shamt = shamtOut;
+	assign funct = functOut;
+	assign immediate = immediateOut;
+	assign target = targetOut;
+
 	always @(*) begin
-		OpCode <= Instruction[31:26];
+		OpCodeOut <= Instruction[31:26];
 		/* R-type */
-		if (OpCode == 6'b0) begin
-			Rs <= Instruction[25:21];
-			Rt <= Instruction[20:16];
-			Rd <= Instruction[15:11];
-			shamt <= Instruction[10:6];
-			funct <= Instruction[5:0];
-			immediate <= 16'b0;
-			target <= 26'b0;
+		if (OpCodeOut == 6'b0) begin
+			RsOut <= Instruction[25:21];
+			RtOut <= Instruction[20:16];
+			RdOut <= Instruction[15:11];
+			shamtOut <= Instruction[10:6];
+			functOut <= Instruction[5:0];
+			immediateOut <= 16'b0;
+			targetOut <= 26'b0;
 		end
 		/* J-type (2, 3 and 26) */
-		if (OpCode == 6'b10 || OpCode == 6'b11 || OpCode == 6'b11010 ) begin
-			Rs <= 5'b0;
-			Rt <= 5'b0;
-			Rd <= 5'b0;
-			shamt <= 5'b0;
-			funct <= 6'b0;
-			immediate <= 16'b0;
-			target <= Instruction[25:0];
+		else if (OpCodeOut == 6'b10 || OpCodeOut == 6'b11 || OpCodeOut == 6'b11010 ) begin
+			RsOut <= 5'b0;
+			RtOut <= 5'b0;
+			RdOut <= 5'b0;
+			shamtOut <= 5'b0;
+			functOut <= 6'b0;
+			immediateOut <= 16'b0;
+			targetOut <= Instruction[25:0];
 		end
 		/* I-type */
 		else begin
-			Rs <= Instruction[25:21];
-			Rt <= Instruction[20:16];
-			Rd <= 5'b0;
-			shamt <= 5'b0;
-			funct <= 6'b0;
-			immediate <= Instruction[15:0];
-			target <= 26'b0;
+			RsOut <= Instruction[25:21];
+			RtOut <= Instruction[20:16];
+			RdOut <= 5'b0;
+			shamtOut <= 5'b0;
+			functOut <= 6'b0;
+			immediateOut <= Instruction[15:0];
+			targetOut <= 26'b0;
 		end
 	end
 endmodule
