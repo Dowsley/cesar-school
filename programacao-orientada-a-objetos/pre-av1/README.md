@@ -1,3 +1,0 @@
-# Lista
-
-O arquivo fitness-tracker disponível na pasta do projeto apresenta um diagrama de classes para um aplicativo de registro de atividades físicas. Implemente as classes básicas para o projeto, de acordo com o diagrama, organizando as classes em uma estrutura de pacote como temos feito no exercícios em sala. Lembrem-se também do encapsulamento dos atributos e da validação destes, de forma a impedir, preferencialmente utilizando exceções que sejam informados valores inválidos.
