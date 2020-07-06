@@ -1,7 +1,7 @@
 module ControlUnit(
         /* Outputs */
         IorD, MemRead, MemWrite, MemToReg, IRWrite, RegDst, 
-        RegWrite, ALUSrcA, ALUSrcB, ALUOp, PCSource, PCWrite, PCWriteCond
+        RegWrite, ALUSrcA, ALUSrcB, ALUOp, PCSource, PCWrite, PCWriteCond,
         /* Inputs */
         Clk, reset, Opcode, Funct
     );
@@ -15,132 +15,158 @@ module ControlUnit(
     input Clk, reset;
     input [5:0] Opcode, Funct;
 
+    /* tmp */
+    reg IorD_tmp, MemRead_tmp, MemWrite_tmp, MemToReg_tmp, IRWrite_tmp;
+    reg RegDst_tmp, RegWrite_tmp, ALUSrcA_tmp, PCWrite_tmp, PCWriteCond_tmp;
+    reg [1:0] ALUSrcB_tmp, ALUOp_tmp, PCSource_tmp;
+
+    assign IorD = IorD_tmp;
+    assign MemRead = MemRead_tmp;
+    assign MemWrite = MemWrite_tmp;
+    assign MemToReg = MemToReg_tmp;
+    assign IRWrite = IRWrite_tmp;
+    assign RegDst = RegDst_tmp;
+    assign RegWrite = RegWrite_tmp;
+    assign ALUSrcA = ALUSrcA_tmp;
+    assign ALUSrcB = ALUSrcB_tmp;
+    assign PCWrite = PCWrite_tmp;
+    assign PCWriteCond = PCWriteCond_tmp;
+    assign ALUOp = ALUOp_tmp;
+    assign PCSource = PCSource_tmp;
+
     /* Initial state: Fetch */
 	initial begin
-        IorD <= 0;
-        MemRead <= 1;
-        MemWrite <= 0;
-        MemToReg <= 0;
-        IRWrite <= 1;
-        RegDst <= 0;
-        RegWrite <= 0;
-        ALUSrcA <= 0;
-        ALUSrcB <= 01;
-        PCWrite <= 1;
-        PCWriteCond <= 0;
-        ALUOp <= 00;
-        PCSource <= 00;
+        IorD_tmp = 0;
+        MemRead_tmp = 1;
+        MemWrite_tmp = 0;
+        MemToReg_tmp = 0;
+        IRWrite_tmp = 1;
+        RegDst_tmp = 0;
+        RegWrite_tmp = 0;
+        ALUSrcA_tmp = 0;
+        ALUSrcB_tmp = 01;
+        PCWrite_tmp = 1;
+        PCWriteCond_tmp = 0;
+        ALUOp_tmp = 00;
+        PCSource_tmp = 00;
 	end
 
 	always @(*) begin
+        if(Clk == 1) begin
         /* Returns to initial state: Fetch */
         if (reset == 1) begin
-            IorD <= 0;
-            MemRead <= 1;
-            MemWrite <= 0;
-            MemToReg <= 0;
-            IRWrite <= 1;
-            RegDst <= 0;
-            RegWrite <= 0;
-            ALUSrcA <= 0;
-            ALUSrcB <= 01;
-            PCWrite <= 1;
-            PCWriteCond <= 0;
-            ALUOp <= 00;
-            PCSource <= 00;
+            IorD_tmp = 0;
+            MemRead_tmp = 1;
+            MemWrite_tmp = 0;
+            MemToReg_tmp = 0;
+            IRWrite_tmp = 1;
+            RegDst_tmp = 0;
+            RegWrite_tmp = 0;
+            ALUSrcA_tmp = 0;
+            ALUSrcB_tmp = 01;
+            PCWrite_tmp = 1;
+            PCWriteCond_tmp = 0;
+            ALUOp_tmp = 00;
+            PCSource_tmp = 00;
         end
 
         /* Verify instruction type */
         // Instrução SW  (opcode = 0x2B)
-        if (Opcode == 2'h2B) begin
-            IorD <= 1; //
-            MemRead <= 0;
-            MemWrite <= 1; //
-            MemToReg <= 0;
-            IRWrite <= 0;
-            RegDst <= 0;
-            RegWrite <= 0;
-            ALUSrcA <= 1; //
-            ALUSrcB <= 2'b10; //
-            PCWrite <= 0;
-            PCWriteCond <= 0;
-            ALUOp <= 00; //
-            PCSource <= 00;
+        if (Opcode == 6'h2B) begin
+            IorD_tmp = 1; //
+            MemRead_tmp = 0;
+            MemWrite_tmp = 1; //
+            MemToReg_tmp = 0;
+            IRWrite_tmp = 0;
+            RegDst_tmp = 0;
+            RegWrite_tmp = 0;
+            ALUSrcA_tmp = 1; //
+            ALUSrcB_tmp = 2'b10; //
+            PCWrite_tmp = 0;
+            PCWriteCond_tmp = 0;
+            ALUOp_tmp = 00; //
+            PCSource_tmp = 00;
+        end
         // Instrução LW (opcode = 0x23)
-        else if (Opcode == 2'h23) begin
-            IorD <= 1; //
-            MemRead <= 1; //
-            MemWrite <= 0;
-            MemToReg <= 0;
-            IRWrite <= 0;
-            RegDst <= 0;
-            RegWrite <= 0;
-            ALUSrcA <= 1; //
-            ALUSrcB <= 2'b10; //
-            PCWrite <= 0;
-            PCWriteCond <= 0;
-            ALUOp <= 00; //
-            PCSource <= 00;
+        if (Opcode == 6'h23) begin
+            IorD_tmp = 1; //
+            MemRead_tmp = 1; //
+            MemWrite_tmp = 0;
+            MemToReg_tmp = 0;
+            IRWrite_tmp = 0;
+            RegDst_tmp = 0;
+            RegWrite_tmp = 0;
+            ALUSrcA_tmp = 1; //
+            ALUSrcB_tmp = 2'b10; //
+            PCWrite_tmp = 0;
+            PCWriteCond_tmp = 0;
+            ALUOp_tmp = 00; //
+            PCSource_tmp = 00;
+        end
         // Instrução J (opcode = 0x02)
-        else if (Opcode == 2'h02) begin
-            IorD <= 0;
-            MemRead <= 0;
-            MemWrite <= 0;
-            MemToReg <= 0;
-            IRWrite <= 0;
-            RegDst <= 0;
-            RegWrite <= 0;
-            ALUSrcA <= 0;
-            ALUSrcB <= 0;
-            PCWrite <= 1; //
-            PCWriteCond <= 0;
-            ALUOp <= 0;
-            PCSource <= 2'b10; //
+        if (Opcode == 6'h02) begin
+            IorD_tmp = 0;
+            MemRead_tmp = 0;
+            MemWrite_tmp = 0;
+            MemToReg_tmp = 0;
+            IRWrite_tmp = 0;
+            RegDst_tmp = 0;
+            RegWrite_tmp = 0;
+            ALUSrcA_tmp = 0;
+            ALUSrcB_tmp = 0;
+            PCWrite_tmp = 1; //
+            PCWriteCond_tmp = 0;
+            ALUOp_tmp = 0;
+            PCSource_tmp = 2'b10; //
+        end
         // Instrução ADD (opcode = 0x00 e funct = 0x20)
-        else if (Opcode == 2'h00 && Funct == 2'h20) begin
-            IorD <= 0;
-            MemRead <= 0;
-            MemWrite <= 0;
-            MemToReg <= 0; //
-            IRWrite <= 0;
-            RegDst <= 1; //
-            RegWrite <= 1; //
-            ALUSrcA <= 1; //
-            ALUSrcB <= 00; //
-            PCWrite <= 0;
-            PCWriteCond <= 0;
-            ALUOp <= 2'b10; //
-            PCSource <= 0;
+        if (Opcode == 6'h00 && Funct == 6'h20) begin
+            IorD_tmp = 0;
+            MemRead_tmp = 0;
+            MemWrite_tmp = 0;
+            MemToReg_tmp = 0; //
+            IRWrite_tmp = 0;
+            RegDst_tmp = 1; //
+            RegWrite_tmp = 1; //
+            ALUSrcA_tmp = 1; //
+            ALUSrcB_tmp = 00; //
+            PCWrite_tmp = 0;
+            PCWriteCond_tmp = 0;
+            ALUOp_tmp = 2'b10; //
+            PCSource_tmp = 0;
+        end
         // Instrução SUB (opcode = 0x00 e funct = 0x22)
-        else if (Opcode == 2'h00 && Funct == 2'h22) begin
-            IorD <= 0;
-            MemRead <= 0;
-            MemWrite <= 0;
-            MemToReg <= 0; //
-            IRWrite <= 0;
-            RegDst <= 1; //
-            RegWrite <= 1; //
-            ALUSrcA <= 1; //
-            ALUSrcB <= 00; //
-            PCWrite <= 0;
-            PCWriteCond <= 0;
-            ALUOp <= 2'b10; //
-            PCSource <= 0;
+        if (Opcode == 6'h00 && Funct == 6'h22) begin
+            IorD_tmp = 0;
+            MemRead_tmp = 0;
+            MemWrite_tmp = 0;
+            MemToReg_tmp = 0; //
+            IRWrite_tmp = 0;
+            RegDst_tmp = 1; //
+            RegWrite_tmp = 1; //
+            ALUSrcA_tmp = 1; //
+            ALUSrcB_tmp = 00; //
+            PCWrite_tmp = 0;
+            PCWriteCond_tmp = 0;
+            ALUOp_tmp = 2'b10; //
+            PCSource_tmp = 0;
+        end
         // Instrução ADDI (opcode = 0x8)
-        else if (Opcode == 2'h08) begin
-            IorD <= 0;
-            MemRead <= 0;
-            MemWrite <= 0;
-            MemToReg <= 0; //
-            IRWrite <= 0;
-            RegDst <= 0; //
-            RegWrite <= 1; //
-            ALUSrcA <= 1; // 
-            ALUSrcB <= 2'b10; // 
-            PCWrite <= 0;
-            PCWriteCond <= 0;
-            ALUOp <= 00; //
-            PCSource <= 0;
+        if (Opcode == 6'h08) begin
+            IorD_tmp = 0;
+            MemRead_tmp = 0;
+            MemWrite_tmp = 0;
+            MemToReg_tmp = 0; //
+            IRWrite_tmp = 0;
+            RegDst_tmp = 0; //
+            RegWrite_tmp = 1; //
+            ALUSrcA_tmp = 1; // 
+            ALUSrcB_tmp = 2'b10; // 
+            PCWrite_tmp = 0;
+            PCWriteCond_tmp = 0;
+            ALUOp_tmp = 00; //
+            PCSource_tmp = 0;
         end
 	end
+    end
 endmodule
