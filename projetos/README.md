@@ -10,5 +10,5 @@ O LOUConnect é uma aplicação web no formato de rede social, com o objetivo de
 
 Para ler o código fonte do protótipo da aplicação, acesse [este link](https://github.com/Dowsley/LOUConnect).
 
-## SteelStats - 2020.1
+## [SteelStats](https://www.docdroid.net/z18Td3B/steelstats-dossie-pdf) - 2020.1
 O SteelStats foi uma aplicação web dashboard, simples e responsiva, desenvolvida para trazer uma melhor visualização de dados dos sistemas de armazenamento de dados da _Gerdau_, uma das maiores fabricantes e distribuídoras de aço da America Latina. Tive o papel de Scrum Master, e participei como desenvolvedor-líder do protótipo.
