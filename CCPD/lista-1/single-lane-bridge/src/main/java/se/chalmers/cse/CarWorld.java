@@ -10,8 +10,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 class CarWorld extends JPanel {
-
-	Image bridge;
+  private static final long serialVersionUID = 1L;
+  Image bridge;
 	Image redCar;
 	Image blueCar;
 
@@ -23,7 +23,6 @@ class CarWorld extends JPanel {
 	public CarWorld() {
 		controller = new TrafficController();
 
-		//redCar = toolkit.getImage("se/chalmers/cse/image/redcar.gif");
 		try {
 			redCar = ImageIO.read(CarWorld.class.getResourceAsStream("/se/chalmers/cse/image/redcar.gif"));
 			blueCar = ImageIO.read(CarWorld.class.getResourceAsStream("/se/chalmers/cse/image/bluecar.gif"));
