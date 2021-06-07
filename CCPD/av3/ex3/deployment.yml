@@ -1,2 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
+metadata:
+  name: deployment
+  labels:
+    app: deployment
+    tier: deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      tier: deployment
+  template:
+    metadata:
+      labels:
+        tier: deployment
+    spec:
+      containers:
+      - name: deployment
+        image: deployment
