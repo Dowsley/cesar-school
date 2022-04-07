@@ -1,9 +1,12 @@
 import socket
+import json
 
 def main():
-   
-    host = '192.168.0.12' #Server ip
-    port = 4000
+    config = {}
+    with open('config.json') as f:
+        config = json.load(f) 
+    host = config['server']['ip']
+    port = config['server']['port']
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind((host, port))

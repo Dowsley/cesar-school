@@ -1,11 +1,14 @@
 import socket
+import json
 
 def main():
-
-    host = '192.168.0.13' #client ip
-    port = 4005
+    config = {}
+    with open('config.json') as f:
+        config = json.load(f) 
+    host = config['client']['ip']
+    port = config['client']['port']
     
-    server = ('192.168.0.12', 4000)
+    server = (config['client']['ip'], config['client']['port'])
     
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind((host,port))
