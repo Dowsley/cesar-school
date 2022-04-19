@@ -10,3 +10,14 @@ ser trocada de maneira segura e gerada por sessão;
 - A troca da chave secreta deverá utilizar algum método de criptografia assimétrica;
 - O código da aplicação bem como um relatório (incluindo o seu manual de utilização) devem
 ser entregues no dia da apresentação.
+
+
+## Idea
+Use RSA along with EAS.
+
+See https://www.precisely.com/blog/data-security/aes-vs-rsa-encryption-differences
+
+And https://en.wikipedia.org/wiki/Hybrid_cryptosystem
+
+## How to use
+"chat.py key1 key2"
