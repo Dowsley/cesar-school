@@ -38,13 +38,15 @@ class EncryptionSession():
 
 
     def RSA_encrypt(self, a_message):
-        tmp = rsa.encrypt(a_message.encode(), rsa.PublicKey.load_pkcs1(self.RSA_public_key, 'PEM'))
+        tmp = rsa.encrypt(a_message.encode(), rsa.PublicKey.load_pkcs1(self.RSA_public_key.encode(), 'PEM'))
         return tmp
 
 
     def RSA_decrypt(self, encoded_encrypted_msg):
-        a = rsa.PrivateKey.load_pkcs1(self.RSA_private_key, 'PEM') 
-        res = rsa.decrypt(encoded_encrypted_msg, a) 
+        key = self.RSA_private_key
+        key_a = key.encode() if type(key) == str else self.RSA_private_key
+        a = rsa.PrivateKey.load_pkcs1(key_a, 'PEM') 
+        res = rsa.decrypt(encoded_encrypted_msg if type(encoded_encrypted_msg) == bytes else encoded_encrypted_msg.encode(), a) 
         return res.decode()
 
     def AES_key_to_str(self):

@@ -6,6 +6,7 @@ from encryption import EncryptionSession
 import secrets
 import ast
 from base64 import b64encode, b64decode
+import time
 
 # Crossplatform util. function for fetching single-char input.
 kb = KBHit()
@@ -109,25 +110,48 @@ class Chat():
                     decoded = data.decode()
                     if decoded.startswith("PRIV:"):
                         encrypted_priv = decoded.replace("PRIV:", '')
-                        sesh.RSA_private_key = sesh.AES_decrypt(encrypted_priv)
+                        sesh.RSA_private_key = sesh.AES_decrypt(ast.literal_eval(encrypted_priv))
                         sesh.stage = 2
                         print("Private key received.")
                 except:
                     pass
             if sesh.stage == 2: 
                 print("Sending ok 200 times seconds")
-                for i in range(200):
+                for i in range(1000):
                     self.sock.sendto('!!OK!!'.encode(), self.target_addr)
                 sesh.done = True
                 self.sock.sendto('Hello! I joined the chat.'.encode(), self.target_addr)
                 return True
 
 
+    def _receive_data_post(self):
+        try:
+            (data, address) = self.sock.recvfrom(1024*10)
+            decoded = data.decode()
+            if decoded:
+                if decoded.startswith('CRIP:'):
+                    thing = self.session.RSA_decrypt(ast.literal_eval(decoded.replace('CRIP:', '')))
+                    self.received_data = thing
+                    return thing
+            return decoded
+        except:
+            return ""
+
+
+    def _get_or_send_input_data_post(self):
+        self.data_to_be_sent, self.should_send, changed = self._iterate_keyboard_input(self.data_to_be_sent)
+        if self.should_send and self.session.done:
+            data = self.session.RSA_encrypt(self.data_to_be_sent)
+            self.sock.sendto(f'CRIP:{data}'.encode(), self.target_addr)
+            self.data_to_be_sent = ''  # Flush
+        return (self.should_send, changed)
+
+
     def ping(self, i):
         prev_message = str(self.received_data)
-        tmp = self._receive_data()
-        is_message_new = False if tmp == "" else prev_message != tmp
-        was_sent, changed = self._get_or_send_input_data()
+        rec = self._receive_data_post()
+        is_message_new = False if rec == "" else prev_message != rec
+        was_sent, changed = self._get_or_send_input_data_post()
 
         changed = is_message_new or changed
         # Screen feedback
@@ -188,7 +212,12 @@ if __name__ == '__main__':
         else:
             chat.loop_auth_as_second()
 
+
         # Connection loop
+        for i in range(200):
+            chat.sock.sendto('Hello! I joined the chat.'.encode(), chat.target_addr)
+            chat.received_data = ''
+            chat.data_to_be_sent = ''
         while True:
             chat.ping(i)
             i += 1
