@@ -4,6 +4,8 @@ from socket import *
 from getch import KBHit
 from encryption import EncryptionSession
 import secrets
+import ast
+from base64 import b64encode, b64decode
 
 # Crossplatform util. function for fetching single-char input.
 kb = KBHit()
@@ -15,7 +17,7 @@ class Chat():
 
         # Config socket state
         self_addr = (config[self_key]['ip'], int(config[self_key]['port']))
-        self.sock = UDPSock = socket(AF_INET, SOCK_DGRAM)
+        self.sock = socket(AF_INET, SOCK_DGRAM)
         self.sock.bind(self_addr)
         self.sock.setblocking(0) # Non-blocking
 
@@ -29,7 +31,7 @@ class Chat():
 
     def _receive_data(self):
         try:
-            (data, address) = self.sock.recvfrom(1024)
+            (data, address) = self.sock.recvfrom(1024*10)
             decoded = data.decode()
             if decoded:
                 self.received_data = decoded
@@ -40,7 +42,7 @@ class Chat():
 
     def _get_or_send_input_data(self):
         self.data_to_be_sent, self.should_send, changed = self._iterate_keyboard_input(self.data_to_be_sent)
-        if self.should_send and self.session.stage >= 4:
+        if self.should_send and self.session.done:
             self.sock.sendto(self.data_to_be_sent.encode(), self.target_addr)
             self.data_to_be_sent = ''  # Flush
         return (self.should_send, changed)
@@ -57,15 +59,13 @@ class Chat():
                     sesh.RSA_generate_keys()
                 self.sock.sendto(f'PUB:{sesh.RSA_public_key}'.encode(), self.target_addr) 
                 try:
-                    (data, address) = self.sock.recvfrom(1024)
+                    (data, address) = self.sock.recvfrom(1024*10)
                     decoded = data.decode()
                     if decoded.startswith("AES:"):
                         enc_AES_key = decoded.replace("AES:", '')
-                        print("BRUH")
-                        sesh.AES_key = sesh.AES_str_to_key(sesh.RSA_decrypt(enc_AES_key))
-                        print("OK")
+                        tmp = ast.literal_eval(enc_AES_key) 
+                        sesh.AES_key = sesh.AES_str_to_key(sesh.RSA_decrypt(tmp))
                         sesh.stage = 1
-                        print("Encrypted AES key received and stored.")
                 except:
                     pass
             if sesh.stage == 1:
@@ -73,9 +73,11 @@ class Chat():
                 enc_priv = sesh.AES_encrypt(sesh.RSA_private_key)
                 self.sock.sendto(f'PRIV:{enc_priv}'.encode(), self.target_addr) 
                 try:
-                    (data, address) = self.sock.recvfrom(1024)
+                    (data, address) = self.sock.recvfrom(1024*10)
                     decoded = data.decode()
                     if decoded == "!!OK!!":
+                        sesh.done = True
+                        self.sock.sendto('Hello! I joined the chat.'.encode(), self.target_addr)
                         return True
                 except:
                     pass
@@ -90,9 +92,8 @@ class Chat():
             if sesh.stage == 0:
                 print("Waiting for public key...")
                 try:
-                    (data, address) = self.sock.recvfrom(1024)
+                    (data, address) = self.sock.recvfrom(1024*10)
                     decoded = data.decode()
-                    print(decoded)
                     if decoded.startswith("PUB:"):
                         sesh.RSA_public_key = decoded.replace("PUB:", '')
                         sesh.stage = 1
@@ -104,9 +105,8 @@ class Chat():
                 AES_hidden = sesh.RSA_encrypt(sesh.AES_key_to_str())
                 self.sock.sendto(f'AES:{AES_hidden}'.encode(), self.target_addr)
                 try:
-                    (data, address) = self.sock.recvfrom(1024)
+                    (data, address) = self.sock.recvfrom(1024*10*10)
                     decoded = data.decode()
-                    print(decoded)
                     if decoded.startswith("PRIV:"):
                         encrypted_priv = decoded.replace("PRIV:", '')
                         sesh.RSA_private_key = sesh.AES_decrypt(encrypted_priv)
@@ -118,17 +118,22 @@ class Chat():
                 print("Sending ok 200 times seconds")
                 for i in range(200):
                     self.sock.sendto('!!OK!!'.encode(), self.target_addr)
+                sesh.done = True
+                self.sock.sendto('Hello! I joined the chat.'.encode(), self.target_addr)
+                return True
 
 
     def ping(self, i):
         prev_message = str(self.received_data)
-        is_message_new = prev_message != self._receive_data()
+        tmp = self._receive_data()
+        is_message_new = False if tmp == "" else prev_message != tmp
         was_sent, changed = self._get_or_send_input_data()
 
         changed = is_message_new or changed
         # Screen feedback
         if i == 0 or changed:
-            print(f'*** {i} TYPE "EXIT" TO QUIT ***\n')
+            chat._clear_terminal()
+            print(f'*** TICK: {i} ///// TYPE "EXIT" TO QUIT ***\n')
             print(f'You are writing: {self.data_to_be_sent}')
             print(f'Last received message: "{self.received_data}"')
 

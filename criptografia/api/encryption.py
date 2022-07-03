@@ -4,6 +4,7 @@ import rsa
 import base64
 from base64 import b64encode, b64decode
 import secrets
+import ast
 
 
 class EncryptionSession():
@@ -21,12 +22,12 @@ class EncryptionSession():
     def AES_encrypt(self, plain_text):
         aes = pyaes.AESModeOfOperationCTR(self.AES_key)
         cipher_text = aes.encrypt(plain_text)
-        return cipher_text.decode()
+        return cipher_text
 
 
     def AES_decrypt(self, cipher_text):
         aes = pyaes.AESModeOfOperationCTR(self.AES_key)
-        decrypted = aes.decrypt(cipher_text).decode()
+        decrypted = aes.decrypt(cipher_text)
         return decrypted
 
 
@@ -42,7 +43,9 @@ class EncryptionSession():
 
 
     def RSA_decrypt(self, encoded_encrypted_msg):
-        return rsa.decrypt(encoded_encrypted_msg, rsa.PrivateKey.load_pkcs1(self.RSA_private_key, 'PEM')).decode()
+        a = rsa.PrivateKey.load_pkcs1(self.RSA_private_key, 'PEM') 
+        res = rsa.decrypt(encoded_encrypted_msg, a) 
+        return res.decode()
 
     def AES_key_to_str(self):
         b64_string = str(b64encode(self.AES_key),'utf-8')
